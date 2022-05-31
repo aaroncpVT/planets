@@ -2376,7 +2376,6 @@ c <- (ggplot(data = horizon_use, mapping = aes(x = SOMc_est, y = SOMc, color = p
       + xlab("SOMMOS Light Frac (g/m2)") + ylab("MIMICS SOMc (g/gm2)")
       + ggtitle('A-Horizon: SOMc'))
 ```{r}
-
 for(i in 1:length(meanODE2_d$MIC_1)){
     meanODE2_d$micRatio[i] <- meanODE2_d$MIC_1[i] / meanODE2_d$MIC_2[i]
 }
@@ -2385,72 +2384,294 @@ for(i in 1:length(minODE2_d$MIC_1)){
     minODE2_d$micRatio[i] <- minODE2_d$MIC_1[i] / minODE2_d$MIC_2[i]
 }
 
+for(i in 1:length(meanODE17_d$MIC_1)){
+    meanODE17_d$micRatio[i] <- meanODE17_d$MIC_1[i] / meanODE17_d$MIC_2[i]
+}
+
+for(i in 1:length(minODE17_d$MIC_1)){
+    minODE17_d$micRatio[i] <- minODE17_d$MIC_1[i] / minODE17_d$MIC_2[i]
+}
+
+for(i in 1:length(meanODE18_d$MIC_1)){
+    meanODE18_d$micRatio[i] <- meanODE18_d$MIC_1[i] / meanODE18_d$MIC_2[i]
+}
+
+for(i in 1:length(minODE2_d$MIC_1)){
+    minODE18_d$micRatio[i] <- minODE18_d$MIC_1[i] / minODE18_d$MIC_2[i]
+}
+
+for(i in 1:length(meanODE19_d$MIC_1)){
+    meanODE19_d$micRatio[i] <- meanODE19_d$MIC_1[i] / meanODE19_d$MIC_2[i]
+}
+
+for(i in 1:length(minODE2_d$MIC_1)){
+    minODE19_d$micRatio[i] <- minODE19_d$MIC_1[i] / minODE19_d$MIC_2[i]
+}
+
+for(i in 1:length(meanODE3_d$MIC_1)){
+    meanODE3_d$micRatio[i] <- meanODE3_d$MIC_1[i] / meanODE3_d$MIC_2[i]
+}
+
+for(i in 1:length(minODE3_d$MIC_1)){
+    minODE3_d$micRatio[i] <- minODE3_d$MIC_1[i] / minODE3_d$MIC_2[i]
+}
+
+for(i in 1:length(meanODE5_d$MIC_1)){
+    meanODE5_d$micRatio[i] <- meanODE5_d$MIC_1[i] / meanODE5_d$MIC_2[i]
+}
+
+for(i in 1:length(minODE2_d$MIC_1)){
+    minODE5_d$micRatio[i] <- minODE5_d$MIC_1[i] / minODE5_d$MIC_2[i]
+}
+
+for(i in 1:length(meanODE6_d$MIC_1)){
+    meanODE6_d$micRatio[i] <- meanODE6_d$MIC_1[i] / meanODE6_d$MIC_2[i]
+}
+
+for(i in 1:length(minODE6_d$MIC_1)){
+    minODE6_d$micRatio[i] <- minODE6_d$MIC_1[i] / minODE6_d$MIC_2[i]
+}
+```
+
+leno17
+blan18
+harv19
+mlbs3
+ornl5
+scbi6
+
+```{r}
+t_1 <- 1:90000
+
+pDELA_somp <- ggplot(NULL, aes(x = t_1)) + 
+    geom_line(data = minODE2_d, aes(x = time, y = SOM_1), color = 'blue') +
+    geom_line(data = meanODE2_d, aes(x = time, y = SOM_1), color = 'red') +
+    xlab('Time (hrs)') + ylab('Delta SOMp (g/cm2)') + ggtitle('DELA: SOMp') 
+    
+    
+
+pDELA_somc <- ggplot(NULL, aes(x = t_1)) + 
+    geom_line(data = minODE2_d, aes(x = time, y = SOM_2), color = 'blue') +
+    geom_line(data = meanODE2_d, aes(x = time, y = SOM_2), color = 'red') +
+    xlab('Time (hrs)') + ylab('Delta SOMc (g/cm2)') + ggtitle('DELA: SOMc')
+
+pDELA_soma <- ggplot(NULL, aes(x = t_1)) + 
+    geom_line(data = minODE2_d, aes(x = time, y = SOM_3), color = 'blue') +
+    geom_line(data = meanODE2_d, aes(x = time, y = SOM_3), color = 'red') +
+    xlab('Time (hrs)') + ylab('Delta SOMa (g/cm2)') + ggtitle('DELA: SOMa')
+
+
+pDELA_micRat <- ggplot(NULL, aes(x = t_1)) + 
+    geom_line(data = minODE2_d, aes(x = time, y = micRatio), color = 'blue') +
+    geom_line(data = meanODE2_d, aes(x = time, y = micRatio), color = 'red') +
+    xlab('Time (hrs)') + ylab('Micr. Community Shifts (ration r/k)') + ggtitle('DELA: MicR/MicK')
+
+
+pDELA_somp + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black")) + 
+    pDELA_somc + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black")) + 
+    pDELA_soma + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black")) + 
+    pDELA_micRat + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black")) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black"))
+```
+
+```{r}
+library(patchwork)
 ```
 
 ```{r}
 t_1 <- 1:90000
 
-pTALL_somp <- ggplot(NULL, aes(x = t_1)) + 
-    geom_line(data = minODE2_d, aes(x = time, y = SOM_1), color = 'blue') +
-    geom_line(data = meanODE2_d, aes(x = time, y = SOM_1), color = 'red') +
-    xlab('Time (hrs)') + ylab('Delta SOMp (g/cm2)')
+pLENO_somp <- ggplot(NULL, aes(x = t_1)) + 
+    geom_line(data = minODE17_d, aes(x = time, y = SOM_1), color = 'blue') +
+    geom_line(data = meanODE17_d, aes(x = time, y = SOM_1), color = 'red') +
+    xlab('Time (hrs)') + ylab('Delta SOMp (g/cm2)') + ggtitle('LENO: SOMp') 
+    
+    
 
-pTALL_somc <- ggplot(NULL, aes(x = t_1)) + 
-    geom_line(data = minODE2_d, aes(x = time, y = SOM_2), color = 'blue') +
-    geom_line(data = meanODE2_d, aes(x = time, y = SOM_2), color = 'red') +
-    xlab('Time (hrs)') + ylab('Delta SOMc (g/cm2)')
+pLENO_somc <- ggplot(NULL, aes(x = t_1)) + 
+    geom_line(data = minODE17_d, aes(x = time, y = SOM_2), color = 'blue') +
+    geom_line(data = meanODE17_d, aes(x = time, y = SOM_2), color = 'red') +
+    xlab('Time (hrs)') + ylab('Delta SOMc (g/cm2)') + ggtitle('LENO: SOMc')
 
-pTALL_soma <- ggplot(NULL, aes(x = t_1)) + 
-    geom_line(data = minODE2_d, aes(x = time, y = SOM_3), color = 'blue') +
-    geom_line(data = meanODE2_d, aes(x = time, y = SOM_3), color = 'red') +
-    xlab('Time (hrs)') + ylab('Delta SOMa (g/cm2)')
+pLENO_soma <- ggplot(NULL, aes(x = t_1)) + 
+    geom_line(data = minODE17_d, aes(x = time, y = SOM_3), color = 'blue') +
+    geom_line(data = meanODE17_d, aes(x = time, y = SOM_3), color = 'red') +
+    xlab('Time (hrs)') + ylab('Delta SOMa (g/cm2)') + ggtitle('LENO: SOMa')
 
 
-pTALL_micRat <- ggplot(NULL, aes(x = t_1)) + 
-    geom_line(data = minODE2_d, aes(x = time, y = micRatio), color = 'blue') +
-    geom_line(data = meanODE2_d, aes(x = time, y = micRatio), color = 'red') +
-    xlab('Time (hrs)') + ylab('Delta Microbial Community (ration r/k)')
+pLENO_micRat <- ggplot(NULL, aes(x = t_1)) + 
+    geom_line(data = minODE17_d, aes(x = time, y = micRatio), color = 'blue') +
+    geom_line(data = meanODE17_d, aes(x = time, y = micRatio), color = 'red') +
+    xlab('Time (hrs)') + ylab('Micr. Community Shifts (ration r/k)') + ggtitle('LENO: MicR/MicK')
 
-pTALL_somp + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black")) + pTALL_somc + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black")) + pTALL_soma + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black")) + pTALL_micRat + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black")) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black"))
+
+pLENO_somp + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black")) + 
+    pLENO_somc + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black")) + 
+    pLENO_soma + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black")) + 
+    pLENO_micRat + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black")) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black"))
 ```
 
 ```{r}
-library(patchwork)
-
-pTALL_somp + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black")) + pTALL_somc + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black")) + pTALL_soma + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black")) + pTALL_micRat + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black")) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black"))
-```
-
-```{r}
-pTALL_somp + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-panel.background = element_blank(), axis.line = element_line(colour = "black"))
-
-pTALL_somc + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-panel.background = element_blank(), axis.line = element_line(colour = "black"))
-
-pTALL_soma + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-panel.background = element_blank(), axis.line = element_line(colour = "black"))
-
-pTALL_micRat + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-panel.background = element_blank(), axis.line = element_line(colour = "black"))
-
-
-```
-
-```{r}
-
-pDELA_somp <- ggplot(NULL, aes(x = t_1)) + 
-    geom_line(data = minODE2_d, aes(y = SOM_1), color = 'blue') +
-    geom_line(data = meanODE2_d, aes(y = SOM_1), color = 'red') +
-    xlab('Time (hrs)') + ylab('Delta SOMP (g/cm2)')
-
-pBLAN_somp <- ggplot(NULL, aes(x = t_1)) + 
-    geom_line(data = minODE18_d, aes(y = SOM_1), color = 'blue') +
-    geom_line(data = meanODE18_d, aes(y = SOM_1), color = 'red') +
-    xlab('Time (hrs)') + ylab('Delta SOMP (g/cm2)')
+t_1 <- 1:90000
 
 pHARV_somp <- ggplot(NULL, aes(x = t_1)) + 
-    geom_line(data = minODE19_d, aes(y = SOM_1), color = 'blue') +
-    geom_line(data = meanODE19_d, aes(y = SOM_1), color = 'red') +
-    xlab('Time (hrs)') + ylab('Delta SOMP (g/cm2)')
+    geom_line(data = minODE19_d, aes(x = time, y = SOM_1), color = 'blue') +
+    geom_line(data = meanODE19_d, aes(x = time, y = SOM_1), color = 'red') +
+    xlab('Time (hrs)') + ylab('Delta SOMp (g/cm2)') + ggtitle('HARV: SOMp') 
+    
+    
 
+pHARV_somc <- ggplot(NULL, aes(x = t_1)) + 
+    geom_line(data = minODE19_d, aes(x = time, y = SOM_2), color = 'blue') +
+    geom_line(data = meanODE19_d, aes(x = time, y = SOM_2), color = 'red') +
+    xlab('Time (hrs)') + ylab('Delta SOMc (g/cm2)') + ggtitle('HARV: SOMc')
+
+pHARV_soma <- ggplot(NULL, aes(x = t_1)) + 
+    geom_line(data = minODE19_d, aes(x = time, y = SOM_3), color = 'blue') +
+    geom_line(data = meanODE19_d, aes(x = time, y = SOM_3), color = 'red') +
+    xlab('Time (hrs)') + ylab('Delta SOMa (g/cm2)') + ggtitle('HARV: SOMa')
+
+
+pHARV_micRat <- ggplot(NULL, aes(x = t_1)) + 
+    geom_line(data = minODE19_d, aes(x = time, y = micRatio), color = 'blue') +
+    geom_line(data = meanODE19_d, aes(x = time, y = micRatio), color = 'red') +
+    xlab('Time (hrs)') + ylab('Micr. Community Shifts (ration r/k)') + ggtitle('HARV: MicR/MicK')
+
+
+pHARV_somp + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black")) + 
+    pHARV_somc + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black")) + 
+    pHARV_soma + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black")) + 
+    pHARV_micRat + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black")) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black"))
+```
+
+```{r}
+t_1 <- 1:90000
+
+pBLAN_somp <- ggplot(NULL, aes(x = t_1)) + 
+    geom_line(data = minODE18_d, aes(x = time, y = SOM_1), color = 'blue') +
+    geom_line(data = meanODE18_d, aes(x = time, y = SOM_1), color = 'red') +
+    xlab('Time (hrs)') + ylab('Delta SOMp (g/cm2)') + ggtitle('BLAN: SOMp') 
+    
+    
+
+pBLAN_somc <- ggplot(NULL, aes(x = t_1)) + 
+    geom_line(data = minODE18_d, aes(x = time, y = SOM_2), color = 'blue') +
+    geom_line(data = meanODE18_d, aes(x = time, y = SOM_2), color = 'red') +
+    xlab('Time (hrs)') + ylab('Delta SOMc (g/cm2)') + ggtitle('BLAN: SOMc')
+
+pBLAN_soma <- ggplot(NULL, aes(x = t_1)) + 
+    geom_line(data = minODE18_d, aes(x = time, y = SOM_3), color = 'blue') +
+    geom_line(data = meanODE18_d, aes(x = time, y = SOM_3), color = 'red') +
+    xlab('Time (hrs)') + ylab('Delta SOMa (g/cm2)') + ggtitle('BLAN: SOMa')
+
+
+pBLAN_micRat <- ggplot(NULL, aes(x = t_1)) + 
+    geom_line(data = minODE18_d, aes(x = time, y = micRatio), color = 'blue') +
+    geom_line(data = meanODE18_d, aes(x = time, y = micRatio), color = 'red') +
+    xlab('Time (hrs)') + ylab('Micr. Community Shifts (ration r/k)') + ggtitle('BLAN: MicR/MicK')
+
+
+pBLAN_somp + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black")) + 
+    pBLAN_somc + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black")) + 
+    pBLAN_soma + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black")) + 
+    pBLAN_micRat + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black")) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black"))
+```
+
+
+```{r}
+t_1 <- 1:90000
+
+pMLBS_somp <- ggplot(NULL, aes(x = t_1)) + 
+    geom_line(data = minODE3_d, aes(x = time, y = SOM_1), color = 'blue') +
+    geom_line(data = meanODE3_d, aes(x = time, y = SOM_1), color = 'red') +
+    xlab('Time (hrs)') + ylab('Delta SOMp (g/cm2)') + ggtitle('MLBS: SOMp') 
+    
+    
+
+pMLBS_somc <- ggplot(NULL, aes(x = t_1)) + 
+    geom_line(data = minODE3_d, aes(x = time, y = SOM_2), color = 'blue') +
+    geom_line(data = meanODE3_d, aes(x = time, y = SOM_2), color = 'red') +
+    xlab('Time (hrs)') + ylab('Delta SOMc (g/cm2)') + ggtitle('MLBS: SOMc')
+
+pMLBS_soma <- ggplot(NULL, aes(x = t_1)) + 
+    geom_line(data = minODE3_d, aes(x = time, y = SOM_3), color = 'blue') +
+    geom_line(data = meanODE3_d, aes(x = time, y = SOM_3), color = 'red') +
+    xlab('Time (hrs)') + ylab('Delta SOMa (g/cm2)') + ggtitle('MLBS: SOMa')
+
+
+pMLBS_micRat <- ggplot(NULL, aes(x = t_1)) + 
+    geom_line(data = minODE3_d, aes(x = time, y = micRatio), color = 'blue') +
+    geom_line(data = meanODE3_d, aes(x = time, y = micRatio), color = 'red') +
+    xlab('Time (hrs)') + ylab('Micr. Community Shifts (ration r/k)') + ggtitle('MLBS: MicR/MicK')
+
+
+pMLBS_somp + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black")) + 
+    pMLBS_somc + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black")) + 
+    pMLBS_soma + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black")) + 
+    pMLBS_micRat + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black")) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black"))
+```
+
+```{r}
+t_1 <- 1:90000
+
+pORNL_somp <- ggplot(NULL, aes(x = t_1)) + 
+    geom_line(data = minODE5_d, aes(x = time, y = SOM_1), color = 'blue') +
+    geom_line(data = meanODE5_d, aes(x = time, y = SOM_1), color = 'red') +
+    xlab('Time (hrs)') + ylab('Delta SOMp (g/cm2)') + ggtitle('ORNL: SOMp') 
+    
+    
+
+pORNL_somc <- ggplot(NULL, aes(x = t_1)) + 
+    geom_line(data = minODE5_d, aes(x = time, y = SOM_2), color = 'blue') +
+    geom_line(data = meanODE5_d, aes(x = time, y = SOM_2), color = 'red') +
+    xlab('Time (hrs)') + ylab('Delta SOMc (g/cm2)') + ggtitle('ORNL: SOMc')
+
+pORNL_soma <- ggplot(NULL, aes(x = t_1)) + 
+    geom_line(data = minODE5_d, aes(x = time, y = SOM_3), color = 'blue') +
+    geom_line(data = meanODE5_d, aes(x = time, y = SOM_3), color = 'red') +
+    xlab('Time (hrs)') + ylab('Delta SOMa (g/cm2)') + ggtitle('ORNL: SOMa')
+
+
+pORNL_micRat <- ggplot(NULL, aes(x = t_1)) + 
+    geom_line(data = minODE5_d, aes(x = time, y = micRatio), color = 'blue') +
+    geom_line(data = meanODE5_d, aes(x = time, y = micRatio), color = 'red') +
+    xlab('Time (hrs)') + ylab('Micr. Community Shifts (ration r/k)') + ggtitle('ORNL: MicR/MicK')
+
+
+pORNL_somp + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black")) + 
+    pORNL_somc + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black")) + 
+    pORNL_soma + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black")) + 
+    pORNL_micRat + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black")) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black"))
+```
+
+```{r}
+t_1 <- 1:90000
+
+pSCBI_somp <- ggplot(NULL, aes(x = t_1)) + 
+    geom_line(data = minODE6_d, aes(x = time, y = SOM_1), color = 'blue') +
+    geom_line(data = meanODE6_d, aes(x = time, y = SOM_1), color = 'red') +
+    xlab('Time (hrs)') + ylab('Delta SOMp (g/cm2)') + ggtitle('SCBI: SOMp') 
+    
+    
+
+pSCBI_somc <- ggplot(NULL, aes(x = t_1)) + 
+    geom_line(data = minODE6_d, aes(x = time, y = SOM_2), color = 'blue') +
+    geom_line(data = meanODE6_d, aes(x = time, y = SOM_2), color = 'red') +
+    xlab('Time (hrs)') + ylab('Delta SOMc (g/cm2)') + ggtitle('SCBI: SOMc')
+
+pSCBI_soma <- ggplot(NULL, aes(x = t_1)) + 
+    geom_line(data = minODE6_d, aes(x = time, y = SOM_3), color = 'blue') +
+    geom_line(data = meanODE6_d, aes(x = time, y = SOM_3), color = 'red') +
+    xlab('Time (hrs)') + ylab('Delta SOMa (g/cm2)') + ggtitle('SCBI: SOMa')
+
+
+pSCBI_micRat <- ggplot(NULL, aes(x = t_1)) + 
+    geom_line(data = minODE6_d, aes(x = time, y = micRatio), color = 'blue') +
+    geom_line(data = meanODE6_d, aes(x = time, y = micRatio), color = 'red') +
+    xlab('Time (hrs)') + ylab('Micr. Community Shifts (ration r/k)') + ggtitle('SCBI: MicR/MicK')
+
+
+pSCBI_somp + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black")) + 
+    pSCBI_somc + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black")) + 
+    pSCBI_soma + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black")) + 
+    pSCBI_micRat + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black")) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black"))
 ```
