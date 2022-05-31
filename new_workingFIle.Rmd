@@ -1,0 +1,2456 @@
+---
+title: "Untitled"
+author: "Aaron Price"
+note: "Functions in MIMICS-CN obtained from ______"
+output: html_document
+---
+
+Citation for original MIMICS-CN code + Other MIMMICS used:  
+Kyker-Snowman...
+
+```{r}
+
+#Read .csv to define the sites to be used
+#horizon_list_price was made to set up the study
+horizon_use <- read.csv('horizon_list_price.csv')
+
+#Initialize ID list
+horizon_ID <- vector('list', length(horizon_use$ï..Site))
+
+#Define the number of horizon by site locations to be used
+n <- length(horizon_use$Horizon)
+
+#Initiate the data frame to be used throughout the study
+data <- data.frame(matrix(NA, nrow = n, ncol = 28))
+colnames(data) <- c('ID', 'Site', 'hor_name', 'Hor_cat', 'depth', 'depth_m', 'SOC', 'ANPP', 
+                    'MAT', 'MAP', 'SAND2', 'CLAY2', 'LIG', 
+                    'CN', 'l_frac', 'OCC', 'h_frac', 'HWE', 'CWE', 'HWE_CWE', 'SOMp_est', 
+                    'SOMc_est', 'Age_C14', 'pH', 'SSA', 'BD', 'BD_kgm2', 'moist_cont')
+
+#Add site and site ID to the end data frame  
+##data_ID is the unique identifier used to reference all incoming data
+for(i in 1:length(data$ID)){
+  data$Site[i] <- horizon_use$ï..Site[i]
+  data$ID[i] <- paste(horizon_use$ï..Site[i], horizon_use$Horizon[i], sep = '_')
+  data$hor_name[i] <- horizon_use$Horizon[i]
+  data$Hor_cat[i] <- horizon_use$Lumped[i]
+}
+
+#Create list of sites for all incoming site specific variables
+site_list <- unique(horizon_use$ï..Site)
+site_list <- sort(site_list)
+
+```
+
+
+```{r}
+#Read NEON litter chemistry observations from WD
+#All files provided in the .zip
+#Obtained from https://data.neonscience.org/data-products/DP1.10033.001
+BLAN_litCN <- read.csv('NEON.D02.BLAN.DP1.10033.001.ltr_litterCarbonNitrogen.2020-11.expanded.20211222T011730Z.csv')
+BLAN_litLig <- read.csv('NEON.D02.BLAN.DP1.10033.001.ltr_litterLignin.2020-11.expanded.20211222T011730Z.csv')
+CLBJ_litCN <- read.csv('NEON.D11.CLBJ.DP1.10033.001.ltr_litterCarbonNitrogen.2019-11.expanded.20211222T013346Z.csv')
+CLBJ_litLig <- read.csv('NEON.D11.CLBJ.DP1.10033.001.ltr_litterLignin.2019-11.expanded.20211222T013346Z.csv')
+DEJU_litCN <- read.csv('NEON.D19.DEJU.DP1.10033.001.ltr_litterCarbonNitrogen.2018-09.expanded.20211221T204116Z.csv')
+DEJU_litLig <- read.csv('NEON.D19.DEJU.DP1.10033.001.ltr_litterLignin.2018-09.expanded.20211221T204116Z.csv')
+DELA_litCN <- read.csv('NEON.D08.DELA.DP1.10033.001.ltr_litterCarbonNitrogen.2019-11.expanded.20211221T234336Z.csv')
+DELA_litLig <- read.csv('NEON.D08.DELA.DP1.10033.001.ltr_litterLignin.2019-11.expanded.20211221T234336Z.csv')
+HARV_litCN <- read.csv('NEON.D01.HARV.DP1.10033.001.ltr_litterCarbonNitrogen.2018-10.expanded.20211221T230847Z.csv')
+HARV_litLig <- read.csv('NEON.D01.HARV.DP1.10033.001.ltr_litterLignin.2018-10.expanded.20211221T230847Z.csv')
+KONZ_litCN <- read.csv('NEON.D06.KONZ.DP1.10033.001.ltr_litterCarbonNitrogen.2017-10.expanded.20211221T204656Z - Copy.csv')
+KONZ_litLig <- read.csv('NEON.D06.KONZ.DP1.10033.001.ltr_litterLignin.2017-10.expanded.20211221T204656Z.csv')
+LENO_litCN <- read.csv('NEON.D08.LENO.DP1.10033.001.ltr_litterCarbonNitrogen.2018-11.expanded.20211221T203200Z.csv')
+LENO_litLig <- read.csv('NEON.D08.LENO.DP1.10033.001.ltr_litterLignin.2018-11.expanded.20211221T203200Z.csv')
+MLBS_litCN <- read.csv('NEON.D07.MLBS.DP1.10033.001.ltr_litterCarbonNitrogen.2018-10.expanded.20211221T210423Z.csv')
+MLBS_litLig <- read.csv('NEON.D07.MLBS.DP1.10033.001.ltr_litterLignin.2018-10.expanded.20211221T210423Z.csv')
+NIWO_litCN <- read.csv('NEON.D13.NIWO.DP1.10033.001.ltr_litterCarbonNitrogen.2020-09.expanded.20211221T220409Z.csv')
+NIWO_litLig <- read.csv('NEON.D13.NIWO.DP1.10033.001.ltr_litterLignin.2020-09.expanded.20211221T220409Z.csv')
+ORNL_litCN <- read.csv('NEON.D07.ORNL.DP1.10033.001.ltr_litterCarbonNitrogen.2017-11.expanded.20211222T031804Z.csv')
+ORNL_litLig <- read.csv('NEON.D07.ORNL.DP1.10033.001.ltr_litterLignin.2017-11.expanded.20211222T031804Z.csv')
+RMNP_litCN <- read.csv('NEON.D10.RMNP.DP1.10033.001.ltr_litterCarbonNitrogen.2020-10.expanded.20211222T032159Z.csv')
+RMNP_litLig <- read.csv('NEON.D10.RMNP.DP1.10033.001.ltr_litterLignin.2020-10.expanded.20211222T032159Z.csv')
+SCBI_litCN <- read.csv('NEON.D02.SCBI.DP1.10033.001.ltr_litterCarbonNitrogen.2017-11.expanded.20211221T231312Z.csv')
+SCBI_litLig <- read.csv('NEON.D02.SCBI.DP1.10033.001.ltr_litterLignin.2017-11.expanded.20211221T231312Z.csv')
+SJER_litCN <- read.csv('NEON.D17.SJER.DP1.10033.001.ltr_litterCarbonNitrogen.2019-10.expanded.20211221T200550Z.csv')
+SJER_litLig <- read.csv('NEON.D17.SJER.DP1.10033.001.ltr_litterLignin.2019-10.expanded.20211221T200550Z.csv')
+SOAP_litCN <- read.csv('NEON.D17.SOAP.DP1.10033.001.ltr_litterCarbonNitrogen.2018-10.expanded.20211222T014358Z.csv')
+SOAP_litLig <- read.csv('NEON.D17.SOAP.DP1.10033.001.ltr_litterLignin.2018-10.expanded.20211222T014358Z.csv')
+STEI_litCN <- read.csv('NEON.D05.STEI.DP1.10033.001.ltr_litterCarbonNitrogen.2016-09.expanded.20211222T025953Z.csv')
+STEI_litLig <- read.csv('NEON.D05.STEI.DP1.10033.001.ltr_litterLignin.2016-09.expanded.20211222T025953Z.csv')
+TALL_litCN <- read.csv('NEON.D08.TALL.DP1.10033.001.ltr_litterCarbonNitrogen.2017-11.expanded.20211222T041711Z.csv')
+TALL_litLig <- read.csv('NEON.D08.TALL.DP1.10033.001.ltr_litterLignin.2017-11.expanded.20211222T041711Z.csv')
+TREE_litCN <- read.csv('NEON.D05.TREE.DP1.10033.001.ltr_litterCarbonNitrogen.2020-09.expanded.20211221T235036Z.csv')
+TREE_litLig <- read.csv('NEON.D05.TREE.DP1.10033.001.ltr_litterLignin.2020-09.expanded.20211221T235036Z.csv')
+UNDE_litCN_1 <- read.csv('NEON.D05.UNDE.DP1.10033.001.ltr_litterCarbonNitrogen.2016-10.expanded.20211221T210318Z.csv')
+UNDE_litLig_1 <- read.csv('NEON.D05.UNDE.DP1.10033.001.ltr_litterLignin.2016-10.expanded.20211221T210318Z.csv')
+UNDE_litCN_2 <- read.csv('NEON.D05.UNDE.DP1.10033.001.ltr_litterCarbonNitrogen.2019-10.expanded.20211221T214230Z.csv')
+UNDE_litLig_2 <- read.csv('NEON.D05.UNDE.DP1.10033.001.ltr_litterLignin.2019-10.expanded.20211221T214230Z.csv')
+WREF_litCN <- read.csv('NEON.D16.WREF.DP1.10033.001.ltr_litterCarbonNitrogen.2019-09.expanded.20211222T040128Z.csv')
+WREF_litLig <- read.csv('NEON.D16.WREF.DP1.10033.001.ltr_litterLignin.2019-09.expanded.20211222T040128Z.csv')
+
+#Using the method mean to calculate average CN for NEON sites
+UNDE_CN_1 <- mean(UNDE_litCN_1$CNratio, na.rm = TRUE)     #Two observations for UNDE
+UNDE_CN_2 <- mean(UNDE_litCN_2$CNratio, na.rm = TRUE)
+#Take mean CN values for each site
+BLAN_CN <- mean(BLAN_litCN$CNratio, na.rm = TRUE)
+CLBJ_CN <- mean(CLBJ_litCN$CNratio, na.rm = TRUE)
+DEJU_CN <- mean(DEJU_litCN$CNratio, na.rm = TRUE)
+DELA_CN <- mean(DELA_litCN$CNratio, na.rm = TRUE)
+HARV_CN <- mean(HARV_litCN$CNratio, na.rm = TRUE)
+KONZ_CN <- mean(KONZ_litCN$CNratio, na.rm = TRUE)
+LENO_CN <- mean(LENO_litCN$CNratio, na.rm = TRUE)
+MLBS_CN <- mean(MLBS_litCN$CNratio, na.rm = TRUE)
+NIWO_CN <- mean(NIWO_litCN$CNratio, na.rm = TRUE)
+ORNL_CN <- mean(ORNL_litCN$CNratio, na.rm = TRUE)
+RMNP_CN <- mean(RMNP_litCN$CNratio, na.rm = TRUE)
+SCBI_CN <- mean(SCBI_litCN$CNratio, na.rm = TRUE)
+SJER_CN <- mean(SJER_litCN$CNratio, na.rm = TRUE)
+SOAP_CN <- mean(SOAP_litCN$CNratio, na.rm = TRUE)
+STEI_CN <- mean(STEI_litCN$CNratio, na.rm = TRUE)
+TALL_CN <- mean(TALL_litCN$CNratio, na.rm = TRUE)
+TREE_CN <- mean(TREE_litCN$CNratio, na.rm = TRUE)
+UNDE_CN <- mean(UNDE_CN_1, UNDE_CN_2, na.rm = TRUE)
+WREF_CN <- mean(WREF_litCN$CNratio, na.rm = TRUE)
+
+#Using the method max to calculate maximum CN for NEON sites
+UNDE_CN_1_max <- max(UNDE_litCN_1$CNratio, na.rm = TRUE)     #Two observations for UNDE
+UNDE_CN_2_max <- max(UNDE_litCN_2$CNratio, na.rm = TRUE)
+#Take max CN values for each site
+BLAN_CNmax <- max(BLAN_litCN$CNratio, na.rm = TRUE)
+CLBJ_CNmax <- max(CLBJ_litCN$CNratio, na.rm = TRUE)
+DEJU_CNmax <- max(DEJU_litCN$CNratio, na.rm = TRUE)
+DELA_CNmax <- max(DELA_litCN$CNratio, na.rm = TRUE)
+HARV_CNmax <- max(HARV_litCN$CNratio, na.rm = TRUE)
+KONZ_CNmax <- max(KONZ_litCN$CNratio, na.rm = TRUE)
+LENO_CNmax <- max(LENO_litCN$CNratio, na.rm = TRUE)
+MLBS_CNmax <- max(MLBS_litCN$CNratio, na.rm = TRUE)
+NIWO_CNmax <- max(NIWO_litCN$CNratio, na.rm = TRUE)
+ORNL_CNmax <- max(ORNL_litCN$CNratio, na.rm = TRUE)
+RMNP_CNmax <- max(RMNP_litCN$CNratio, na.rm = TRUE)
+SCBI_CNmax <- max(SCBI_litCN$CNratio, na.rm = TRUE)
+SJER_CNmax <- max(SJER_litCN$CNratio, na.rm = TRUE)
+SOAP_CNmax <- max(SOAP_litCN$CNratio, na.rm = TRUE)
+STEI_CNmax <- max(STEI_litCN$CNratio, na.rm = TRUE)
+TALL_CNmax <- max(TALL_litCN$CNratio, na.rm = TRUE)
+TREE_CNmax <- max(TREE_litCN$CNratio, na.rm = TRUE)
+UNDE_CNmax <- max(UNDE_CN_1_max, UNDE_CN_2_max, na.rm = TRUE)
+WREF_CNmax <- max(WREF_litCN$CNratio, na.rm = TRUE)
+
+#Using the method min to calculate minimum CN for NEON sites
+UNDE_CN_1_min <- min(UNDE_litCN_1$CNratio, na.rm = TRUE)     #Two observations for UNDE
+UNDE_CN_2_min <- min(UNDE_litCN_2$CNratio, na.rm = TRUE)
+#Take min CN values for each site
+BLAN_CNmin <- min(BLAN_litCN$CNratio, na.rm = TRUE)
+CLBJ_CNmin <- min(CLBJ_litCN$CNratio, na.rm = TRUE)
+DEJU_CNmin <- min(DEJU_litCN$CNratio, na.rm = TRUE)
+DELA_CNmin <- min(DELA_litCN$CNratio, na.rm = TRUE)
+HARV_CNmin <- min(HARV_litCN$CNratio, na.rm = TRUE)
+KONZ_CNmin <- min(KONZ_litCN$CNratio, na.rm = TRUE)
+LENO_CNmin <- min(LENO_litCN$CNratio, na.rm = TRUE)
+MLBS_CNmin <- min(MLBS_litCN$CNratio, na.rm = TRUE)
+NIWO_CNmin <- min(NIWO_litCN$CNratio, na.rm = TRUE)
+ORNL_CNmin <- min(ORNL_litCN$CNratio, na.rm = TRUE)
+RMNP_CNmin <- min(RMNP_litCN$CNratio, na.rm = TRUE)
+SCBI_CNmin <- min(SCBI_litCN$CNratio, na.rm = TRUE)
+SJER_CNmin <- min(SJER_litCN$CNratio, na.rm = TRUE)
+SOAP_CNmin <- min(SOAP_litCN$CNratio, na.rm = TRUE)
+STEI_CNmin <- min(STEI_litCN$CNratio, na.rm = TRUE)
+TALL_CNmin <- min(TALL_litCN$CNratio, na.rm = TRUE)
+TREE_CNmin <- min(TREE_litCN$CNratio, na.rm = TRUE)
+UNDE_CNmin <- min(UNDE_CN_1_min, UNDE_CN_2_min, na.rm = TRUE)
+WREF_CNmin <- min(WREF_litCN$CNratio, na.rm = TRUE)
+
+#Create CN lists by site
+##*ENSURE THEY ARE IN ALPHABETICAL ORDER***
+cn_list_mean <- c(BLAN_CN, CLBJ_CN, DEJU_CN, DELA_CN, HARV_CN, KONZ_CN,
+             LENO_CN, MLBS_CN, NIWO_CN, ORNL_CN, RMNP_CN, SCBI_CN, 
+             SJER_CN, SOAP_CN, STEI_CN, TALL_CN, TREE_CN, UNDE_CN, 
+             WREF_CN)
+
+cn_list_max <- c(BLAN_CNmax, CLBJ_CNmax, DEJU_CNmax, DELA_CNmax, HARV_CNmax, KONZ_CNmax,
+             LENO_CNmax, MLBS_CNmax, NIWO_CNmax, ORNL_CNmax, RMNP_CNmax, SCBI_CNmax, 
+             SJER_CNmax, SOAP_CNmax, STEI_CNmax, TALL_CNmax, TREE_CNmax, UNDE_CNmax, 
+             WREF_CNmax)
+
+cn_list_min <- c(BLAN_CNmin, CLBJ_CNmin, DEJU_CNmin, DELA_CNmin, HARV_CNmin, KONZ_CNmin,
+             LENO_CNmin, MLBS_CNmin, NIWO_CNmin, ORNL_CNmin, RMNP_CNmin, SCBI_CNmin, 
+             SJER_CNmin, SOAP_CNmin, STEI_CNmin, TALL_CNmin, TREE_CNmin, UNDE_CNmin, 
+             WREF_CNmin)
+
+
+
+#Use the method mean to calculate average lignin for NEON sites
+UNDE_lig_1 <- mean(UNDE_litLig_1$ligninPercent, na.rm = TRUE)   #Two observations for UNDE
+UNDE_lig_2 <- mean(UNDE_litLig_2$ligninPercent, na.rm = TRUE)
+#Take mean lignin values for each site
+BLAN_lig <- mean(BLAN_litLig$ligninPercent, na.rm = TRUE)
+CLBJ_lig <- mean(CLBJ_litLig$ligninPercent, na.rm = TRUE)
+DEJU_lig <- mean(DEJU_litLig$ligninPercent, na.rm = TRUE)
+DELA_lig <- mean(DELA_litLig$ligninPercent, na.rm = TRUE)
+HARV_lig <- mean(HARV_litLig$ligninPercent, na.rm = TRUE)
+KONZ_lig <- mean(KONZ_litLig$ligninPercent, na.rm = TRUE)
+LENO_lig <- mean(LENO_litLig$ligninPercent, na.rm = TRUE)
+MLBS_lig <- mean(MLBS_litLig$ligninPercent, na.rm = TRUE)
+NIWO_lig <- mean(NIWO_litLig$ligninPercent, na.rm = TRUE)
+ORNL_lig <- mean(ORNL_litLig$ligninPercent, na.rm = TRUE)
+RMNP_lig <- mean(RMNP_litLig$ligninPercent, na.rm = TRUE)
+SCBI_lig <- mean(SCBI_litLig$ligninPercent, na.rm = TRUE)
+SJER_lig <- mean(SJER_litLig$ligninPercent, na.rm = TRUE)
+SOAP_lig <- mean(SOAP_litLig$ligninPercent, na.rm = TRUE)
+STEI_lig <- mean(STEI_litLig$ligninPercent, na.rm = TRUE)
+TALL_lig <- mean(TALL_litLig$ligninPercent, na.rm = TRUE)
+TREE_lig <- mean(TREE_litLig$ligninPercent, na.rm = TRUE)
+UNDE_lig <- mean(UNDE_lig_1, UNDE_lig_2, na.rm = TRUE)
+WREF_lig <- mean(WREF_litLig$ligninPercent, na.rm = TRUE)
+
+#Use the method max to calculate maximum lignin for NEON sites
+UNDE_lig_1_max <- max(UNDE_litLig_1$ligninPercent, na.rm = TRUE)   #Two observations for UNDE
+UNDE_lig_2_max <- max(UNDE_litLig_2$ligninPercent, na.rm = TRUE)
+#Take max lignin values for each site
+BLAN_ligmax <- max(BLAN_litLig$ligninPercent, na.rm = TRUE)
+CLBJ_ligmax <- max(CLBJ_litLig$ligninPercent, na.rm = TRUE)
+DEJU_ligmax <- max(DEJU_litLig$ligninPercent, na.rm = TRUE)
+DELA_ligmax <- max(DELA_litLig$ligninPercent, na.rm = TRUE)
+HARV_ligmax <- max(HARV_litLig$ligninPercent, na.rm = TRUE)
+KONZ_ligmax <- max(KONZ_litLig$ligninPercent, na.rm = TRUE)
+LENO_ligmax <- max(LENO_litLig$ligninPercent, na.rm = TRUE)
+MLBS_ligmax <- max(MLBS_litLig$ligninPercent, na.rm = TRUE)
+NIWO_ligmax <- max(NIWO_litLig$ligninPercent, na.rm = TRUE)
+ORNL_ligmax <- max(ORNL_litLig$ligninPercent, na.rm = TRUE)
+RMNP_ligmax <- max(RMNP_litLig$ligninPercent, na.rm = TRUE)
+SCBI_ligmax <- max(SCBI_litLig$ligninPercent, na.rm = TRUE)
+SJER_ligmax <- max(SJER_litLig$ligninPercent, na.rm = TRUE)
+SOAP_ligmax <- max(SOAP_litLig$ligninPercent, na.rm = TRUE)
+STEI_ligmax <- max(STEI_litLig$ligninPercent, na.rm = TRUE)
+TALL_ligmax <- max(TALL_litLig$ligninPercent, na.rm = TRUE)
+TREE_ligmax <- max(TREE_litLig$ligninPercent, na.rm = TRUE)
+UNDE_ligmax <- max(UNDE_lig_1_max, UNDE_lig_2_max, na.rm = TRUE)
+WREF_ligmax <- max(WREF_litLig$ligninPercent, na.rm = TRUE)
+
+
+#Use the method min to calculate minimum lignin for NEON sites
+UNDE_lig_1_min <- min(UNDE_litLig_1$ligninPercent, na.rm = TRUE)   #Two observations for UNDE
+UNDE_lig_2_min <- min(UNDE_litLig_2$ligninPercent, na.rm = TRUE)
+#Take min lignin values for each site
+BLAN_ligmin <- min(BLAN_litLig$ligninPercent, na.rm = TRUE)
+CLBJ_ligmin <- min(CLBJ_litLig$ligninPercent, na.rm = TRUE)
+DEJU_ligmin <- min(DEJU_litLig$ligninPercent, na.rm = TRUE)
+DELA_ligmin <- min(DELA_litLig$ligninPercent, na.rm = TRUE)
+HARV_ligmin <- min(HARV_litLig$ligninPercent, na.rm = TRUE)
+KONZ_ligmin <- min(KONZ_litLig$ligninPercent, na.rm = TRUE)
+LENO_ligmin <- min(LENO_litLig$ligninPercent, na.rm = TRUE)
+MLBS_ligmin <- min(MLBS_litLig$ligninPercent, na.rm = TRUE)
+NIWO_ligmin <- min(NIWO_litLig$ligninPercent, na.rm = TRUE)
+ORNL_ligmin <- min(ORNL_litLig$ligninPercent, na.rm = TRUE)
+RMNP_ligmin <- min(RMNP_litLig$ligninPercent, na.rm = TRUE)
+SCBI_ligmin <- min(SCBI_litLig$ligninPercent, na.rm = TRUE)
+SJER_ligmin <- min(SJER_litLig$ligninPercent, na.rm = TRUE)
+SOAP_ligmin <- min(SOAP_litLig$ligninPercent, na.rm = TRUE)
+STEI_ligmin <- min(STEI_litLig$ligninPercent, na.rm = TRUE)
+TALL_ligmin <- min(TALL_litLig$ligninPercent, na.rm = TRUE)
+TREE_ligmin <- min(TREE_litLig$ligninPercent, na.rm = TRUE)
+UNDE_ligmin <- min(UNDE_lig_1_min, UNDE_lig_2_min, na.rm = TRUE)
+WREF_ligmin <- min(WREF_litLig$ligninPercent, na.rm = TRUE)
+
+#Create lignin lists by site
+##*ENSURE THEY ARE IN ALPHABETICAL ORDER***
+lig_list_mean <- c(BLAN_lig, CLBJ_lig, DEJU_lig, DELA_lig, HARV_lig,
+              KONZ_lig, LENO_lig, MLBS_lig, NIWO_lig, ORNL_lig,
+              RMNP_lig, SCBI_lig, SJER_lig, SOAP_lig, STEI_lig,
+              TALL_lig, TREE_lig, UNDE_lig, WREF_lig)
+
+lig_list_max <- c(BLAN_ligmax, CLBJ_ligmax, DEJU_ligmax, DELA_ligmax, HARV_ligmax,
+              KONZ_ligmax, LENO_ligmax, MLBS_ligmax, NIWO_ligmax, ORNL_ligmax,
+              RMNP_ligmax, SCBI_ligmax, SJER_ligmax, SOAP_ligmax, STEI_ligmax,
+              TALL_ligmax, TREE_ligmax, UNDE_ligmax, WREF_ligmax)
+
+lig_list_min <- c(BLAN_ligmin, CLBJ_ligmin, DEJU_ligmin, DELA_ligmin, HARV_ligmin,
+              KONZ_ligmin, LENO_ligmin, MLBS_ligmin, NIWO_ligmin, ORNL_ligmin,
+              RMNP_ligmin, SCBI_ligmin, SJER_ligmin, SOAP_ligmin, STEI_ligmin,
+              TALL_ligmin, TREE_ligmin, UNDE_ligmin, WREF_ligmin)
+```
+
+```{r}
+#Initiate new data frame for lig and CN values
+site_num <- length(site_list)
+lig_cn_dataMEAN <- data.frame(matrix(NA, nrow = site_num, ncol = 3))
+lig_cn_dataMAX <- data.frame(matrix(NA, nrow = site_num, ncol = 3))
+lig_cn_dataMIN <- data.frame(matrix(NA, nrow = site_num, ncol = 3))
+
+colnames(lig_cn_dataMEAN) <- c('Site', 'CN', 'LIG')
+colnames(lig_cn_dataMAX) <- c('Site', 'CN', 'LIG')
+colnames(lig_cn_dataMIN) <- c('Site', 'CN', 'LIG')
+
+#Add lists of lig and CN values to new data frame
+##Ensure that they were previously entered in alphabetical order
+lig_cn_dataMEAN$Site <- site_list
+lig_cn_dataMEAN$CN <- cn_list_mean
+lig_cn_dataMEAN$LIG <- lig_list_mean
+
+lig_cn_dataMAX$Site <- site_list
+lig_cn_dataMAX$CN <- cn_list_max
+lig_cn_dataMAX$LIG <- lig_list_max
+
+lig_cn_dataMIN$Site <- site_list
+lig_cn_dataMIN$CN <- cn_list_min
+lig_cn_dataMIN$LIG <- lig_list_min
+```
+
+```{r}
+
+#Create an initial site list
+SOMMOS_site <- read.csv('SOMMOS_site_list.csv')
+#Use site ID to add climate and ecosystem data to central data frame
+for(i in 1:length(data$Site)){
+  for(n in 1:length(SOMMOS_site$site_id)){
+    if(SOMMOS_site$site_id[n] == data$Site[i]){
+      data$MAT[i] <- SOMMOS_site$MAT[n]
+      data$ANPP[i] <- SOMMOS_site$NPP_05_14.kgCm2yr[n] * 1000
+      data$MAP[i] <- SOMMOS_site$MAP[n]
+    }
+  }
+}
+#Filling missing data (justification to come)
+data$ANPP[1] <- 500
+data$ANPP[46] <- 500
+
+```
+
+### Site by horizon information
+#### Read age of 14C in each horizon
+```{r}
+#Read the 14C data
+SOMMOS_14c <- read.csv('SOMMOS_14C_data.csv')
+
+#Add unique horizon ID to 14C data
+for(i in 1:length(SOMMOS_14c$site_id)){
+  SOMMOS_14c$Horizon_id[i] <- paste(SOMMOS_14c$site_id[i], SOMMOS_14c$horizon[i], sep = '_')
+}
+#Add 14C data to final data frame via unique identifier 
+for(i in 1:length(data$ID)){
+  for(n in 1:length(SOMMOS_14c$age_14C)){
+    if(SOMMOS_14c$Horizon_id[n] == data$ID[i]){
+      data$Age_C14[i] <- SOMMOS_14c$age_14C[n]
+    }
+  }
+}
+```
+
+#### Read the depth and moisture content of each horizon
+```{r}
+#Read the horizon data
+SOMMOS_horizon <- read.csv('SOMMOS_horizon_data.csv')
+
+#Create ID for each specific horizon 
+for(i in 1:length(SOMMOS_horizon$site_id)){
+  SOMMOS_horizon$Horizon_id[i] <- paste(SOMMOS_horizon$site_id[i],
+                                        SOMMOS_horizon$horizon[i],
+                                        sep = '_')
+}
+#Add data for depth and moisture content to indexed ID's
+for(i in 1:length(data$ID)){
+  for(n in 1:length(SOMMOS_horizon$site_id)){
+    if(SOMMOS_horizon$Horizon_id[n] == data$ID[i]){
+      data$depth[i] <- SOMMOS_horizon$bottom_dept_cm[n]
+      data$depth_m[i] <- SOMMOS_horizon$bottom_dept_cm[n] * (1/100)
+      data$moist_cont[i] <- SOMMOS_horizon$moisture_content_gg[n]
+    }
+  }
+}
+#Filling missing depth variables
+for(i in 1:length(data$depth)){
+  if(is.na(data$depth[i])){
+    data$depth[i] <- 7 
+  }
+}
+```
+
+#### Read the bulk density for each horizon
+```{r}
+#Read sample composite data from csv
+SOMMOS_sample <- read.csv('SOMMOS_sample_composite_data.csv')
+#Create IDs within the new data
+for(i in 1:length(SOMMOS_sample$site_id)){
+  SOMMOS_sample$Horizon_id[i] <- paste(SOMMOS_sample$site_id[i],
+                                       SOMMOS_sample$horizon[i],
+                                       sep = '_')
+}
+#Add bulk density to the central data frame
+for(i in 1:length(data$ID)){
+  for(n in 1:length(SOMMOS_sample$site_id)){
+    if(SOMMOS_sample$Horizon_id[n] == data$ID[i]){
+      data$BD[i] <- SOMMOS_sample$ws_bulk_density_gcm3[n] 
+      data$BD_kgm2[i] <- SOMMOS_sample$ws_bulk_density_gcm3[n] * 10
+    }
+  }
+}
+
+
+```
+
+#### Read hot water and cold water extractable carbon data for each horizon
+```{r}
+SOMMOS_TOC <- read.csv('SOMMOS_TOC_data.csv')
+
+for(i in 1:length(SOMMOS_TOC$site_id)){
+  SOMMOS_TOC$Horizon_ID[i] <- paste(SOMMOS_TOC$site_id[i],
+                                    SOMMOS_TOC$horizon[i],
+                                    sep = '_')
+}
+
+for(i in 1:length(data$ID)){
+  for(n in 1:length(SOMMOS_TOC$Horizon_ID)){
+    if(SOMMOS_TOC$Horizon_ID[n] == data$ID[i] & SOMMOS_TOC$extract[n] == 'CWE'){
+      data$CWE[i] <- SOMMOS_TOC$C_conc_mg_g[n]
+    } else{
+      if(SOMMOS_TOC$Horizon_ID[n] == data$ID[i] & SOMMOS_TOC$extract[n] == 'HWE'){
+        data$HWE[i] <- SOMMOS_TOC$C_conc_mg_g[n]
+      }  
+    }
+  }
+}
+
+for(i in 1:length(data$ID)){
+  data$HWE_CWE[i] <- data$HWE[i] + data$CWE[i]
+}
+
+#for(i in 1:length(data$ID)){
+##  data$HWE[i] <- data$HWE[i] * data$BD[i] * data$depth[i] 
+#  data$CWE[i] <- data$CWE[i] * data$BD[i] * data$depth[i] 
+#  data$HWE_CWE[i] <-  data$HWE_CWE[i] * data$BD[i] * data$depth[i]
+#}
+
+#for(i in 1:length(data$ID)){
+#  data$HWE_m2[i] <- data$HWE[i] * 1000 * data$BD_kgm2[i] * data$depth_m[i] 
+#  data$CWE_m2[i] <- data$CWE[i] * 1000 * data$BD_kgm2[i] * data$depth_m[i] 
+#  #data$HWE_CWE_m2[i] <-  data$HWE_CWE[i] * data$BD[i] * data$depth[i]
+#}
+```
+
+### Collecting site by horizon data on carbon fractionation in NEON site soils
+```{r}
+c_pool <- read.csv('C_pool_Price.csv')
+
+for(i in 1:length(c_pool$site_horizon_inc)){
+  c_pool$Horizon_ID[i] <- substr(c_pool$site_horizon_inc[i],1,nchar(c_pool$site_horizon_inc[i])-4)
+}
+
+for(i in 1:length(data$ID)){
+  for(n in 1:length(c_pool$site_horizon_inc)){
+    if(c_pool$Horizon_ID[n] == data$ID[i]){
+      data$l_frac[i] <- c_pool$FLF.gC100g[n]
+      data$OCC[i] <- c_pool$OCC.gC100g[n]
+      data$h_frac[i] <- c_pool$HF.gC100g[n]
+      data$SOMp_est[i] <- data$OCC[i] + data$h_frac[i]
+      data$SOMc_est[i] <- data$l_frac[i]
+    }
+  }
+}
+
+```
+
+#### Read the chemcial and textural properties of interest for each horizon
+```{r}
+#Read texture/chemistry data from file
+SOMMOS_text_chem <- read.csv('SOMMOS_soil_texture_chemistry_data.csv')
+#Create IDs within text/chem data
+for(i in 1:length(SOMMOS_text_chem$site_id)){
+  SOMMOS_text_chem$Horizon_id[i] <- paste(SOMMOS_text_chem$site_id[i],
+                                          SOMMOS_text_chem$horizon[i],
+                                          sep = '_')
+}
+#Add pH, SOC, CLAY, and SAND to central data frame by indexed ID
+for(i in 1:length(data$ID)){
+  for(n in 1:length(SOMMOS_text_chem$site_id)){
+    if(SOMMOS_text_chem$Horizon_id[n] == data$ID[i]){
+      data$pH[i] <- SOMMOS_text_chem$pH[n]
+      data$SOC[i] <- SOMMOS_text_chem$LOI_g100g[n]
+      data$SAND2[i] <- SOMMOS_text_chem$proportion_sand[n]
+      data$CLAY2[i] <- SOMMOS_text_chem$proportion_clay[n]
+      data$SSA[i] <- SOMMOS_text_chem$total_ssa_m2g[n]
+    }
+  }
+}
+
+```
+
+```{r}
+A_data <- data.frame(data)
+A_data <- data[-c(19:54),]
+
+data_meanVal <- data.frame(A_data)
+data_maxVal <- data.frame(A_data)
+data_minVal <- data.frame(A_data)
+
+
+for(i in 1:length(data_meanVal$Site)){
+  for(n in 1:length(lig_cn_dataMEAN$Site)){
+    if(lig_cn_dataMEAN$Site[n] == data_meanVal$Site[i]){
+      data_meanVal$LIG[i] <- lig_cn_dataMEAN$LIG[n]
+      data_meanVal$CN[i] <- lig_cn_dataMEAN$CN[n]
+    }
+  }
+}
+
+for(i in 1:length(data_maxVal$Site)){
+  for(n in 1:length(lig_cn_dataMAX$Site)){
+    if(lig_cn_dataMAX$Site[n] == data_maxVal$Site[i]){
+      data_maxVal$LIG[i] <- lig_cn_dataMAX$LIG[n]
+      data_maxVal$CN[i] <- lig_cn_dataMAX$CN[n]
+    }
+  }
+}
+
+for(i in 1:length(data_minVal$Site)){
+  for(n in 1:length(lig_cn_dataMIN$Site)){
+    if(lig_cn_dataMIN$Site[n] == data_minVal$Site[i]){
+      data_minVal$LIG[i] <- lig_cn_dataMIN$LIG[n]
+      data_minVal$CN[i] <- lig_cn_dataMIN$CN[n]
+    }
+  }
+}
+```
+
+
+
+```{r}
+
+fout_mean <<- 'LTER_SITE_mean.csv'
+fout_max <<- 'LTER_SITE_max.csv' 
+fout_min <<- 'LTER_SITE_min.csv'
+
+write.table(data_meanVal, file=fout_mean, sep=",", col.names=TRUE, row.names=FALSE)
+write.table(data_maxVal, file=fout_max, sep=",", col.names=TRUE, row.names=FALSE)
+write.table(data_minVal, file=fout_min, sep=",", col.names=TRUE, row.names=FALSE)
+
+```
+
+```{r}
+
+FXEQ <- function(t, y, pars) {
+    with (as.list(c(y, pars)),{
+        
+        #Carbon fluxes
+        #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        #Flows to and from MIC_1
+        LITmin[1] = MIC_1 * VMAX[1] * LIT_1 / (KM[1] + LIT_1)#LIT_1)   #MIC_1 decomp of MET lit
+        LITmin[2] = MIC_1 * VMAX[2] * LIT_2 / (KM[2] + LIT_2)#LIT_2)   #MIC_1 decomp of STRUC lit
+        SOMmin[1] = MIC_1 * VMAX[3] * SOM_3 / (KM[3] + SOM_3)#SOM_3)   #decomp of SOMa by MIC_1
+        MICtrn[1] = MIC_1^densDep * turnover[1]  * fPHYS[1] #MIC_1 turnover to PHYSICAL SOM
+        MICtrn[2] = MIC_1^densDep * turnover[1]  * fCHEM[1] #MIC_1 turnover to CHEMICAL SOM
+        MICtrn[3] = MIC_1^densDep * turnover[1]  * fAVAI[1] #MIC_1 turnover to AVAILABLE SOM
+        
+        #Flows to and from MIC_2
+        LITmin[3] = MIC_2 * VMAX[4] * LIT_1 / (KM[4] + LIT_1)#LIT_1)   #decomp of MET litter
+        LITmin[4] = MIC_2 * VMAX[5] * LIT_2 / (KM[5] + LIT_2)#LIT_2)   #decomp of SRUCTURAL litter
+        SOMmin[2] = MIC_2 * VMAX[6] * SOM_3 / (KM[6] + SOM_3)#SOM_3)   #decomp of SOMa by MIC_2
+        MICtrn[4] = MIC_2^densDep * turnover[2]  * fPHYS[2]                  #MIC_2 turnover to PHYSICAL  SOM
+        MICtrn[5] = MIC_2^densDep * turnover[2]  * fCHEM[2]                  #MIC_2 turnover to CHEMICAL  SOM
+        MICtrn[6] = MIC_2^densDep * turnover[2]  * fAVAI[2]                  #MIC_2 turnover to AVAILABLE SOM
+        
+        DEsorb    = SOM_1 * desorb  #* (MIC_1 + MIC_2)		#desorbtion of PHYS to AVAIL (function of fCLAY)
+        OXIDAT    = ((MIC_2 * VMAX[5] * SOM_2 / (KO[2]*KM[5] + SOM_2)) +#SOM_2)) +
+                         (MIC_1 * VMAX[2] * SOM_2 / (KO[1]*KM[2] + SOM_2)))#SOM_2)))  #oxidation of C to A
+        
+        #Nitrogen fluxes
+        #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        #Flows to and from MIC_1
+        LITminN[1] =  LITmin[1]*LIT_1_N/(LIT_1+1e-100)#LITmin[1]/CN_m
+        LITminN[2] =  LITmin[2]*LIT_2_N/(LIT_2++1e-100)#LITmin[2]/CN_s
+        SOMminN[1] =  SOMmin[1]*(SOM_3_N/(SOM_3++1e-100))#SOMmin[1]*(SOM_3_N/SOM_3)#*relRateN
+        MICtrnN[1] =  MICtrn[1]*MIC_1_N/(MIC_1+1e-100)#MICtrn[1]/CN_r
+        MICtrnN[2] =  MICtrn[2]*MIC_1_N/(MIC_1+1e-100)#MICtrn[2]/CN_r
+        MICtrnN[3] =  MICtrn[3]*MIC_1_N/(MIC_1+1e-100)#MICtrn[3]/CN_r
+        
+        #Flows to and from MIC_2
+        LITminN[3] =  LITmin[3]*LIT_1_N/(LIT_1+1e-100)#LITmin[3]/CN_m
+        LITminN[4] =  LITmin[4]*LIT_2_N/(LIT_2+1e-100)#LITmin[4]/CN_s
+        SOMminN[2] =  SOMmin[2]*(SOM_3_N/(SOM_3+1e-100))#SOMmin[2]*(SOM_3_N/SOM_3)#*relRateN
+        MICtrnN[4] =  MICtrn[4]*MIC_2_N/(MIC_2+1e-100)#MICtrn[4]/CN_K
+        MICtrnN[5] =  MICtrn[5]*MIC_2_N/(MIC_2+1e-100)#MICtrn[5]/CN_K
+        MICtrnN[6] =  MICtrn[6]*MIC_2_N/(MIC_2+1e-100)#MICtrn[6]/CN_K
+        
+        DEsorbN    =  DEsorb[1]*(SOM_1_N/(SOM_1+1e-100))#*relRateN
+        OXIDATN    =  OXIDAT[1]*(SOM_2_N/(SOM_2+1e-100))#*relRateN
+        DINup[1]   = (1-Nleak)*DIN*MIC_1/(MIC_1+MIC_2+1e-100) #Partitions DIN between microbial pools based on relative biomass
+        DINup[2]   = (1-Nleak)*DIN*MIC_2/(MIC_1+MIC_2+1e-100)
+        
+        #####
+        upMIC_1    = CUE[1]*(LITmin[1] + SOMmin[1]) + CUE[2]*(LITmin[2])
+        upMIC_1_N  = NUE*(LITminN[1] + SOMminN[1]) + NUE*(LITminN[2]) + DINup[1]
+        CNup[1]    = (upMIC_1)/(upMIC_1_N+1e-100) #Trying to optimize run speed here by avoiding /0
+        Overflow[1] = (upMIC_1) - (upMIC_1_N)*min(CN_r, CNup[1])
+        Nspill[1]   = (upMIC_1_N) - (upMIC_1)/max(CN_r, CNup[1])
+        
+        upMIC_2    = CUE[3]*(LITmin[3] + SOMmin[2]) + CUE[4]*(LITmin[4])
+        upMIC_2_N  = NUE*(LITminN[3] + SOMminN[2]) + NUE*(LITminN[4]) + DINup[2]
+        CNup[2]    = (upMIC_2)/(upMIC_2_N+1e-100)
+        Overflow[2] = (upMIC_2) - (upMIC_2_N)*min(CN_K, CNup[2])
+        Nspill[2]   = (upMIC_2_N) - (upMIC_2)/max(CN_K, CNup[2])
+        ######
+        
+        dLIT_1 = Inputs[1]*(1-FI[1]) - LITmin[1] - LITmin[3]
+        dLIT_2 = Inputs[2]*(1-FI[2]) - LITmin[2] - LITmin[4]
+        dMIC_1 = CUE[1]*(LITmin[1] + SOMmin[1]) + CUE[2]*(LITmin[2]) - sum(MICtrn[1:3]) - Overflow[1]
+        dMIC_2 = CUE[3]*(LITmin[3] + SOMmin[2]) + CUE[4]*(LITmin[4]) - sum(MICtrn[4:6]) - Overflow[2] 
+        dSOM_1 = Inputs[1]*FI[1] + MICtrn[1] + MICtrn[4] - DEsorb 
+        dSOM_2 = Inputs[2]*FI[2] + MICtrn[2] + MICtrn[5] - OXIDAT
+        dSOM_3 = MICtrn[3] + MICtrn[6] + DEsorb + OXIDAT - SOMmin[1] - SOMmin[2]
+        
+        dLIT_1_N = Inputs[1]*(1-FI[1])/CN_m - LITminN[1] - LITminN[3]
+        dLIT_2_N = Inputs[2]*(1-FI[2])/CN_s - LITminN[2] - LITminN[4]
+        dMIC_1_N = NUE*(LITminN[1] + SOMminN[1]) + NUE*(LITminN[2]) - sum(MICtrnN[1:3]) + DINup[1] - Nspill[1]
+        dMIC_2_N = NUE*(LITminN[3] + SOMminN[2]) + NUE*(LITminN[4]) - sum(MICtrnN[4:6]) + DINup[2] - Nspill[2]
+        dSOM_1_N = Inputs[1]*FI[1]/CN_m + MICtrnN[1] + MICtrnN[4] - DEsorbN
+        dSOM_2_N = Inputs[2]*FI[2]/CN_s + MICtrnN[2] + MICtrnN[5] - OXIDATN
+        dSOM_3_N = MICtrnN[3] + MICtrnN[6] + DEsorbN + OXIDATN - SOMminN[1] - SOMminN[2]
+        
+        dDIN = (1-NUE)*(LITminN[1] + LITminN[2] + SOMminN[1]) +  #Inputs from r decomp
+            (1-NUE)*(LITminN[3] + LITminN[4] + SOMminN[2]) +  #Inputs from K decomp
+            Nspill[1] + Nspill[2] - DINup[1] - DINup[2]    #Uptake to microbial pools and spillage
+        LeachingLoss = Nleak*DIN
+        dDIN = dDIN-LeachingLoss #N leaching losses    
+        
+        list(c(dLIT_1, dLIT_2, dMIC_1, dMIC_2, dSOM_1, dSOM_2, dSOM_3,dLIT_1_N, dLIT_2_N, dMIC_1_N, dMIC_2_N, dSOM_1_N, dSOM_2_N, dSOM_3_N,dDIN))
+    })
+}
+
+
+TFXEQ <- function(t, y, pars) {
+    with (as.list(c(y, pars)),{
+        
+        #Carbon fluxes
+        #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        #Flows to and from MIC_1
+        LITmin[1] = MIC_1 * VMAX[1] * LIT_1 / (KM[1] + LIT_1)#LIT_1)   #MIC_1 decomp of MET lit
+        LITmin[2] = MIC_1 * VMAX[2] * LIT_2 / (KM[2] + LIT_2)#LIT_2)   #MIC_1 decomp of STRUC lit
+        SOMmin[1] = MIC_1 * VMAX[3] * SOM_3 / (KM[3] + SOM_3)#SOM_3)   #decomp of SOMa by MIC_1
+        MICtrn[1] = MIC_1^densDep * turnover[1]  * fPHYS[1] #MIC_1 turnover to PHYSICAL SOM
+        MICtrn[2] = MIC_1^densDep * turnover[1]  * fCHEM[1] #MIC_1 turnover to CHEMICAL SOM
+        MICtrn[3] = MIC_1^densDep * turnover[1]  * fAVAI[1] #MIC_1 turnover to AVAILABLE SOM
+        
+        #Flows to and from MIC_2
+        LITmin[3] = MIC_2 * VMAX[4] * LIT_1 / (KM[4] + LIT_1)#LIT_1)   #decomp of MET litter
+        LITmin[4] = MIC_2 * VMAX[5] * LIT_2 / (KM[5] + LIT_2)#LIT_2)   #decomp of SRUCTURAL litter
+        SOMmin[2] = MIC_2 * VMAX[6] * SOM_3 / (KM[6] + SOM_3)#SOM_3)   #decomp of SOMa by MIC_2
+        MICtrn[4] = MIC_2^densDep * turnover[2]  * fPHYS[2]                  #MIC_2 turnover to PHYSICAL  SOM
+        MICtrn[5] = MIC_2^densDep * turnover[2]  * fCHEM[2]                  #MIC_2 turnover to CHEMICAL  SOM
+        MICtrn[6] = MIC_2^densDep * turnover[2]  * fAVAI[2]                  #MIC_2 turnover to AVAILABLE SOM
+        
+        DEsorb    = SOM_1 * desorb  #* (MIC_1 + MIC_2)		#desorbtion of PHYS to AVAIL (function of fCLAY)
+        OXIDAT    = ((MIC_2 * VMAX[5] * SOM_2 / (KO[2]*KM[5] + SOM_2)) +#SOM_2)) +
+                         (MIC_1 * VMAX[2] * SOM_2 / (KO[1]*KM[2] + SOM_2)))#SOM_2)))  #oxidation of C to A
+        
+        #Nitrogen fluxes
+        #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        #Flows to and from MIC_1
+        LITminN[1] =  LITmin[1]*LIT_1_N/(LIT_1+1e-100)#LITmin[1]/CN_m
+        LITminN[2] =  LITmin[2]*LIT_2_N/(LIT_2++1e-100)#LITmin[2]/CN_s
+        SOMminN[1] =  SOMmin[1]*(SOM_3_N/(SOM_3++1e-100))#SOMmin[1]*(SOM_3_N/SOM_3)#*relRateN
+        MICtrnN[1] =  MICtrn[1]*MIC_1_N/(MIC_1+1e-100)#MICtrn[1]/CN_r
+        MICtrnN[2] =  MICtrn[2]*MIC_1_N/(MIC_1+1e-100)#MICtrn[2]/CN_r
+        MICtrnN[3] =  MICtrn[3]*MIC_1_N/(MIC_1+1e-100)#MICtrn[3]/CN_r
+        
+        #Flows to and from MIC_2
+        LITminN[3] =  LITmin[3]*LIT_1_N/(LIT_1+1e-100)#LITmin[3]/CN_m
+        LITminN[4] =  LITmin[4]*LIT_2_N/(LIT_2+1e-100)#LITmin[4]/CN_s
+        SOMminN[2] =  SOMmin[2]*(SOM_3_N/(SOM_3+1e-100))#SOMmin[2]*(SOM_3_N/SOM_3)#*relRateN
+        MICtrnN[4] =  MICtrn[4]*MIC_2_N/(MIC_2+1e-100)#MICtrn[4]/CN_K
+        MICtrnN[5] =  MICtrn[5]*MIC_2_N/(MIC_2+1e-100)#MICtrn[5]/CN_K
+        MICtrnN[6] =  MICtrn[6]*MIC_2_N/(MIC_2+1e-100)#MICtrn[6]/CN_K
+        
+        DEsorbN    =  DEsorb[1]*(SOM_1_N/(SOM_1+1e-100))#*relRateN
+        OXIDATN    =  OXIDAT[1]*(SOM_2_N/(SOM_2+1e-100))#*relRateN
+        DINup[1]   = (1-Nleak)*DIN*MIC_1/(MIC_1+MIC_2+1e-100) #Partitions available DIN between microbial pools based on relative biomass
+        DINup[2]   = (1-Nleak)*DIN*MIC_2/(MIC_1+MIC_2+1e-100)
+        
+        #####
+        upMIC_1    = CUE[1]*(LITmin[1] + SOMmin[1]) + CUE[2]*(LITmin[2])
+        upMIC_1_N  = NUE*(LITminN[1] + SOMminN[1]) + NUE*(LITminN[2]) + DINup[1]
+        CNup[1]    = (upMIC_1)/(upMIC_1_N+1e-100) #Trying to optimize run speed here by avoiding /0
+        Overflow[1] = (upMIC_1) - (upMIC_1_N)*min(CN_r, CNup[1])
+        Nspill[1]   = (upMIC_1_N) - (upMIC_1)/max(CN_r, CNup[1])
+        
+        upMIC_2    = CUE[3]*(LITmin[3] + SOMmin[2]) + CUE[4]*(LITmin[4])
+        upMIC_2_N  = NUE*(LITminN[3] + SOMminN[2]) + NUE*(LITminN[4]) + DINup[2]
+        CNup[2]    = (upMIC_2)/(upMIC_2_N+1e-100)
+        Overflow[2] = (upMIC_2) - (upMIC_2_N)*min(CN_K, CNup[2])
+        Nspill[2]   = (upMIC_2_N) - (upMIC_2)/max(CN_K, CNup[2])
+        ######
+        
+        dLIT_1 = Inputs[1]*(1-FI[1]) - LITmin[1] - LITmin[3]
+        dLIT_2 = Inputs[2]*(1-FI[2]) - LITmin[2] - LITmin[4]
+        dMIC_1 = CUE[1]*(LITmin[1] + SOMmin[1]) + CUE[2]*(LITmin[2]) - sum(MICtrn[1:3]) - Overflow[1]
+        dMIC_2 = CUE[3]*(LITmin[3] + SOMmin[2]) + CUE[4]*(LITmin[4]) - sum(MICtrn[4:6]) - Overflow[2] 
+        dSOM_1 = Inputs[1]*FI[1] + MICtrn[1] + MICtrn[4] - DEsorb 
+        dSOM_2 = Inputs[2]*FI[2] + MICtrn[2] + MICtrn[5] - OXIDAT
+        dSOM_3 = MICtrn[3] + MICtrn[6] + DEsorb + OXIDAT - SOMmin[1] - SOMmin[2]
+        
+        dLIT_1_N = Inputs[1]*(1-FI[1])/CN_m - LITminN[1] - LITminN[3]
+        dLIT_2_N = Inputs[2]*(1-FI[2])/CN_s - LITminN[2] - LITminN[4]
+        dMIC_1_N = NUE*(LITminN[1] + SOMminN[1]) + NUE*(LITminN[2]) - sum(MICtrnN[1:3]) + DINup[1] - Nspill[1]
+        dMIC_2_N = NUE*(LITminN[3] + SOMminN[2]) + NUE*(LITminN[4]) - sum(MICtrnN[4:6]) + DINup[2] - Nspill[2]
+        dSOM_1_N = Inputs[1]*FI[1]/CN_m + MICtrnN[1] + MICtrnN[4] - DEsorbN
+        dSOM_2_N = Inputs[2]*FI[2]/CN_s + MICtrnN[2] + MICtrnN[5] - OXIDATN
+        dSOM_3_N = MICtrnN[3] + MICtrnN[6] + DEsorbN + OXIDATN - SOMminN[1] - SOMminN[2]
+        
+        dDIN = (1-NUE)*(LITminN[1] + LITminN[2] + SOMminN[1]) +  #Inputs from r decomp
+            (1-NUE)*(LITminN[3] + LITminN[4] + SOMminN[2]) +  #Inputs from K decomp
+            Nspill[1] + Nspill[2] - DINup[1] - DINup[2]    #Uptake to microbial pools and spillage
+        LeachingLoss = Nleak*DIN
+        dDIN = dDIN-LeachingLoss #N leaching losses  
+        
+        #Tracer tier calculations
+        # III. Carbon, tracer
+        TLITmin[1] = TLIT_1/LIT_1*LITmin[1]   #MIC_1 decomp of MET lit
+        TLITmin[2] = TLIT_2/LIT_2*LITmin[2]   #MIC_1 decomp of STRUC lit
+        TSOMmin[1] = TSOM_3/SOM_3*SOMmin[1]   #Decomp of SOMa by MIC_1
+        TMICtrn[1] = TMIC_1/MIC_1*MICtrn[1]   #MIC_1 turnover to SOMp
+        TMICtrn[2] = TMIC_1/MIC_1*MICtrn[2]   #MIC_1 turnover to SOMc
+        TMICtrn[3] = TMIC_1/MIC_1*MICtrn[3]   #MIC_1 turnover to SOMa
+        
+        #Flows to and from MIC_2
+        TLITmin[3] = TLIT_1/LIT_1*LITmin[3]   #decomp of MET litter
+        TLITmin[4] = TLIT_2/LIT_2*LITmin[4]   #decomp of SRUCTURAL litter
+        TSOMmin[2] = TSOM_3/SOM_3*SOMmin[2]   #decomp of PHYSICAL SOM by MIC_1
+        TMICtrn[4] = TMIC_2/MIC_2*MICtrn[4]   #MIC_2 turnover to SOMp
+        TMICtrn[5] = TMIC_2/MIC_2*MICtrn[5]   #MIC_2 turnover to SOMc
+        TMICtrn[6] = TMIC_2/MIC_2*MICtrn[6]   #MIC_2 turnover to SOMa
+        
+        TDEsorb[1]    = TSOM_1/SOM_1*DEsorb[1]#SOM_1[2] * desorb  #* (MIC_1 + MIC_2)  #desorbtion of PHYS to AVAIL (function of fCLAY)
+        TOXIDAT[1]    = TSOM_2/SOM_2*OXIDAT[1]
+        
+        #Flows to and from MIC_1
+        TLITminN[1] =  TLITmin[1]*TLIT_1_N/(TLIT_1+1e-100)
+        TLITminN[2] =  TLITmin[2]*TLIT_2_N/(TLIT_2+1e-100)
+        TMICtrnN[1] =  TMICtrn[1]*TMIC_1_N/(TMIC_1+1e-100)
+        TMICtrnN[2] =  TMICtrn[2]*TMIC_1_N/(TMIC_1+1e-100)
+        TMICtrnN[3] =  TMICtrn[3]*TMIC_1_N/(TMIC_1+1e-100)
+        TSOMminN[1] =  TSOMmin[1]*TSOM_3_N/(TSOM_3+1e-100)  
+        
+        #Flows to and from MIC_2
+        TLITminN[3] =  TLITmin[3]*TLIT_1_N/(TLIT_1+1e-100)
+        TLITminN[4] =  TLITmin[4]*TLIT_2_N/(TLIT_2+1e-100)
+        TMICtrnN[4] =  TMICtrn[4]*TMIC_2_N/(TMIC_2+1e-100)
+        TMICtrnN[5] =  TMICtrn[5]*TMIC_2_N/(TMIC_2+1e-100)
+        TMICtrnN[6] =  TMICtrn[6]*TMIC_2_N/(TMIC_2+1e-100)
+        TSOMminN[2] =  TSOMmin[2]*TSOM_3_N/(TSOM_3+1e-100)
+        
+        TDEsorbN =  TDEsorb*TSOM_1_N/(TSOM_1+1e-100)
+        TOXIDATN =  TOXIDAT*TSOM_2_N/(TSOM_2+1e-100)
+        TDINup[1] = TDIN/(DIN+1e-100)*DINup[1]
+        TDINup[2] = TDIN/(DIN+1e-100)*DINup[2]
+        
+        #####
+        TNimport[1] = fracNImportr*LeachingLoss
+        TNimport[2] = fracNImportK*LeachingLoss
+        
+        upTMIC_1    = CUE[1]*(TLITmin[1] + TSOMmin[1]) + CUE[2]*TLITmin[2]
+        upTMIC_1_N  = NUE*(TLITminN[1] + TSOMminN[1]) + NUE*TLITminN[2] + TDINup[1] + TNimport[1]
+        TCNup[1]    = upTMIC_1/(upTMIC_1_N+1e-100)
+        TOverflow[1] = upTMIC_1 - upTMIC_1_N*min(CN_r, TCNup[1])
+        TNspill[1]   = upTMIC_1_N - upTMIC_1/max(CN_r, TCNup[1])
+        
+        upTMIC_2    = CUE[3]*(TLITmin[3] + TSOMmin[2]) + CUE[4]*TLITmin[4]
+        upTMIC_2_N  = NUE*(TLITminN[3] + TSOMminN[2]) + NUE*TLITminN[4] + TDINup[2] + TNimport[2]
+        TCNup[2]    = upTMIC_2/(upTMIC_2_N+1e-100)
+        TOverflow[2] = upTMIC_2 - upTMIC_2_N*min(CN_K, TCNup[2])
+        TNspill[2]   = upTMIC_2_N - upTMIC_2/max(CN_K, TCNup[2])
+        ######
+        
+        dTLIT_1 = - TLITmin[1] - TLITmin[3]
+        dTLIT_2 = - TLITmin[2] - TLITmin[4]
+        dTMIC_1 = CUE[1]*(TLITmin[1] + TSOMmin[1]) + CUE[2]*TLITmin[2] - sum(TMICtrn[1:3]) - TOverflow[1]
+        dTMIC_2 = CUE[3]*(TLITmin[3] + TSOMmin[2]) + CUE[4]*TLITmin[4] - sum(TMICtrn[4:6]) - TOverflow[2]
+        dTSOM_1 = TMICtrn[1] + TMICtrn[4] - TDEsorb[1]
+        dTSOM_2 = TMICtrn[2] + TMICtrn[5] - TOXIDAT[1]
+        dTSOM_3 = TMICtrn[3] + TMICtrn[6] + TDEsorb[1] + TOXIDAT[1] - TSOMmin[1] - TSOMmin[2] 
+        
+        dTLIT_1_N = - TLITminN[1] - TLITminN[3]
+        dTLIT_2_N = - TLITminN[2] - TLITminN[4]
+        dTMIC_1_N = NUE*TLITminN[1] + NUE*TLITminN[2] - sum(TMICtrnN[1:3]) + TDINup[1] + NUE*TSOMminN[1] + TNimport[1] - TNspill[1]
+        dTMIC_2_N = NUE*TLITminN[3] + NUE*TLITminN[4] - sum(TMICtrnN[4:6]) + TDINup[2] + NUE*TSOMminN[2] + TNimport[2] - TNspill[2]
+        dTSOM_1_N = TMICtrnN[1] + TMICtrnN[4] - TDEsorbN[1]
+        dTSOM_2_N = TMICtrnN[2] + TMICtrnN[5] - TOXIDATN[1]
+        dTSOM_3_N = TMICtrn[3]/CN_r + TMICtrn[6]/CN_K + TDEsorbN[1] + TOXIDATN[1] - TSOMminN[1] - TSOMminN[2]
+        
+        dTDIN = (1-NUE)*(TLITminN[1] + TLITminN[2] + TSOMminN[1]) +  #Inputs from r decomp
+            (1-NUE)*(TLITminN[3] + TLITminN[4] + TSOMminN[2]) +  #Inputs from K decomp
+            TNspill[1] + TNspill[2] - TDINup[1] - TDINup[2]    #Uptake to microbial pools and spillage
+        dTDIN = dTDIN-(Nleak)*TDIN #N leaching losses
+        
+        list(c(dLIT_1, dLIT_2, dMIC_1, dMIC_2, dSOM_1, dSOM_2, dSOM_3, dLIT_1_N, 
+               dLIT_2_N, dMIC_1_N, dMIC_2_N, dSOM_1_N, dSOM_2_N, dSOM_3_N, dDIN,
+               dTLIT_1, dTLIT_2, dTMIC_1, dTMIC_2, dTSOM_1, dTSOM_2, dTSOM_3, dTLIT_1_N, 
+               dTLIT_2_N, dTMIC_1_N, dTMIC_2_N, dTSOM_1_N, dTSOM_2_N, dTSOM_3_N, dTDIN))
+    })
+}
+
+
+SSoutput <<- data.frame(matrix(NA,nrow=14, ncol=19))
+colnames(SSoutput) = c("Site", "MICr","MICK","LITm","LITs","SOMp","SOMc","SOMa",
+                       "MICrN","MICKN","LITmN","LITsN","SOMpN","SOMcN","SOMaN","InorgN",
+                       "NminTot","NminNet","Resp")
+
+
+LITtype  <<- c('TRAEf', 'PIREf','THPLf','ACSAf','QUPRf','DRGLf')
+bagMET   <<- c(10.6, 36.2, 37.4, 56.8, 37.1, 49.3) #from Gordon's LitterCharacteristics.txt
+bagLIG   <<- c(16.2, 19.2, 26.7, 15.9, 23.5, 10.9) # % from Gordon's LitterCharacteristics.txt
+bagN     <<- c(0.38, 0.59, 0.62, 0.81, 1.03, 1.97) # %N 
+bagCN    <<- c(133.3,92.7, 83.1, 61.8, 50.5, 24.2)
+calcN    <<- (1 / bagCN) / 2.5 * 100
+calcMET  <<- 0.85 - 0.013 * bagLIG/calcN #as calculated in DAYCENT
+bagMET   <<- calcMET
+
+LTERdata = read.csv("LTER_SITE_mean.csv") #site level forcing variables
+ANPP_C  <<- LTERdata$ANPP      # convert to gC/m2/y from g/m2/y
+strSite <<- as.character(LTERdata$Site)  #convert site names to string
+nsites  <<- length(strSite)
+npts   <<- 6*10*14 #6 litter * 10 years * 14 sites
+clay  <<- LTERdata$CLAY2/100 
+d1 <<- LTERdata$depth
+tsoi  <<- LTERdata$MAT
+nsites <<- length(LTERdata$Site)
+lig   <<- LTERdata$LIG/100
+Nnew  <<- 1/LTERdata$CN/2.5             #N in litter additions
+fMET1 <<- 0.85 - 0.013 * lig / Nnew    #as partitioned in Daycent
+
+
+siteSpecificParameters = function() {
+    
+    #Parameters related to inputs
+    EST_LIT_in  <<- ANPP_C[s] / (365*24)   #gC/m2/h (from g/m2/y, Knapp et al. Science 2001)
+    BAG_LIT_in  <<- 100      #gC/m2/h
+    soilDepth       <<- d1[s]
+    h2y         <<- 24*365
+    MICROtoECO  <<- soilDepth * 1e4 * 1e6 / 1e6   #mgC/cm3 to kgC/km2
+    EST_LIT     <<- EST_LIT_in  * 1e3 / 1e4    #mgC/cm2/h 
+    BAG_LIT     <<- BAG_LIT_in  * 1e3 / 1e4    #mgC/cm2/h
+    fMET        <<- fMET1[s]
+    Inputs        <<- array(NA, dim=2)              #Litter inputs to MET/STR
+    Inputs[1]     <<- (EST_LIT / soilDepth) * fMET      #partitioned to layers
+    Inputs[2]     <<- (EST_LIT / soilDepth) * (1-fMET)
+    FI       <<- c(0.05,0.3)#c(0.05, 0.05)#
+    
+    BAG      <<- array(NA, dim=c(6,2))              #litter BAG inputs to MET/STR
+    for (i in 1:6) {
+        BAG[i,1]   <<- (BAG_LIT / soilDepth) * bagMET[i]      #partitioned to layers
+        BAG[i,2]   <<- (BAG_LIT / soilDepth) * (1-bagMET[i])
+    }
+    
+    #Parameters related to stabilization mechanisms
+    fCLAY       <<- clay[s]
+    fPHYS    <<- 0.1 * c(.15 * exp(1.3*fCLAY), 0.1 * exp(0.8*fCLAY)) #Sulman et al. 2018
+    fCHEM    <<- 3*c(0.1 * exp(-3*fMET) * 1, 0.3 * exp(-3*fMET) * 1) 	#Sulman et al. 2018 #fraction to SOMc
+    fAVAI    <<- 1-(fPHYS + fCHEM)
+    desorb   <<- 2e-5      * exp(-4.5*(fCLAY)) #Sulman et al. 2018
+    desorb   <<- 0.05*desorb
+    Nleak   <<- 0.2#.1   #This is the proportion N lost from DIN pool at each hourly time step.
+    
+    #Parameters related to microbial physiology and pool stoichiometry
+    CUE        <<- c(0.55, 0.25, 0.75, 0.35)  #for LITm and LITs entering MICr and MICK, respectively
+    NUE        <<- .85         #Nitrogen stoichiometry of fixed pools
+    CN_m        <<- 15
+    CN_s        <<- (LTERdata$CN[s]-CN_m*fMET)/(1-fMET)
+    CN_s_BAG    <<-  (bagCN-CN_m*bagMET)/(1-bagMET)
+    CN_r        <<-6#5
+    CN_K        <<-10#8
+    
+    turnover      <<- c(5.2e-4*exp(0.3*(fMET)), 2.4e-4*exp(0.1*(fMET)))	#WORKS BETTER FOR N_RESPONSE RATIO
+    turnover_MOD1 <<- sqrt(ANPP_C[s]/100)  #basicaily standardize against NWT
+    turnover_MOD1[turnover_MOD1 < 0.6] <<- 0.6 # correction not used in LIDET resutls 
+    turnover_MOD1[turnover_MOD1 > 1.3] <<- 1.3      #Sulman et al. 2018
+    turnover      <<- turnover * turnover_MOD1
+    turnover <<- turnover/2.2
+    turnover <<- turnover^2*0.55/(.45*Inputs)
+    densDep <<- 2#1 #This exponent controls the density dependence of microbial turnover. Currently anything other than 1 breaks things.
+    
+    fracNImportr  <<-  0 #No N import for r strategists
+    fracNImportK  <<-  0.2 #Only K strategists can import N
+    
+    #Parameters related to temperature-sensitive enzyme kinetics
+    TSOI        <<- tsoi[s]   
+    #Calculate Vmax & (using parameters from German 2012)
+    #from "gamma" simulations "best", uses max Vslope, min Kslope
+    Vslope   <<- array(NA,dim=6)
+    Vslope[1]<<- 0.043 #META LIT to MIC_1
+    Vslope[2]<<- 0.043 #STRU LIT to MIC_1 
+    Vslope[3]<<- 0.063 #AVAI SOM to MIC_1 
+    Vslope[4]<<- 0.043 #META LIT to MIC_2 
+    Vslope[5]<<- 0.063 #STRU LIT to MIC_2 
+    Vslope[6]<<- 0.063 #AVAI SOM to MIC_2 
+    Vint     <<- 5.47
+    aV       <<- 8e-6
+    aV       <<- aV*.06 #Forward
+    Vmax     <<- exp(TSOI * Vslope + Vint) * aV
+    
+    Kslope   <<- array(NA,dim=6)
+    Kslope[1]<<- 0.017 #META LIT to MIC_1
+    Kslope[2]<<- 0.027 #STRU LIT to MIC_1 
+    Kslope[3]<<- 0.017 #AVAI SOM to MIC_1 
+    Kslope[4]<<- 0.017 #META LIT to MIC_2
+    Kslope[5]<<- 0.027 #STRU LIT to MIC_2
+    Kslope[6]<<- 0.017 #AVAI SOM to MIC_2
+    Kint     <<- 3.19
+    aK       <<- 10
+    aK       <<- aK/20 #Forward
+    Km       <<- exp(Kslope * TSOI + Kint) * aK
+    
+    #Enzyme kinetic modifiers:
+    k        <<- 2.0    #2.0			#REDUCED FROM 3 TO 1, REDUCES TEXTURE EFFECTS ON SOMa decay
+    a        <<- 2.0    #2.2			#increased from 4.0 to 4.5
+    cMAX     <<- 1.4                    #ORIG 1.4 Maximum CHEM SOM scalar w/   0% Clay 
+    cMIN     <<- 1.2                    #ORIG 1.4 Minimum CHEM SOM scalar w/ 100% Clay 
+    cSLOPE   <<- cMIN - cMAX            #Slope of linear function of cSCALAR for CHEM SOM  
+    pSCALAR  <<- a * exp(-k*(sqrt(fCLAY)))  #Scalar for texture effects on SOMp
+    
+    #------------!!MODIFIERS AS IN MIMICS2_b!!---------------
+    MOD1     <<- c(10, 2*.75, 10, 3, 3*.75, 2) 
+    MOD2     <<- c( 8, 2 ,4 * pSCALAR, 2, 4, 6 * pSCALAR) 	
+    
+    VMAX     <<- Vmax * MOD1
+    KM       <<- Km / MOD2
+    KO       <<- c(6,6)     #Values from Sulman et al. 2018
+}
+
+
+initializePools = function() {
+    LIT_1  <<- 1
+    LIT_2  <<- 1
+    MIC_1  <<- 1
+    MIC_2  <<- 1
+    SOM_1  <<- 1
+    SOM_2  <<- 1
+    SOM_3  <<- 1
+    
+    LIT_1_N  <<- .1
+    LIT_2_N  <<- .1
+    MIC_1_N  <<- .1
+    MIC_2_N  <<- .1
+    SOM_1_N  <<- .1
+    SOM_2_N  <<- .1
+    SOM_3_N  <<- .1
+    DIN      <<- .1
+    
+    LITmin  <<- array(NA, dim=4)
+    MICtrn  <<- array(NA, dim=6)
+    SOMmin  <<- array(NA, dim=2)
+    DEsorb  <<- array(NA, dim=1)
+    OXIDAT  <<- array(NA, dim=1)
+    LITminN   <<- array(NA, dim=4)
+    MICtrnN   <<- array(NA, dim=6)
+    SOMminN   <<- array(NA, dim=2)
+    DEsorbN   <<- array(NA, dim=1)
+    OXIDATN   <<- array(NA, dim=1)
+    DINup     <<- array(NA, dim=2)
+    Overflow  <<- array(NA, dim=2)
+    Nspill    <<- array(NA, dim=2)
+    CNup      <<- array(NA, dim=2)
+    upMIC_1   <<-  array(NA, dim=1)
+    upMIC_1_N <<-  array(NA, dim=1)
+    upMIC_2   <<-  array(NA, dim=1)
+    upMIC_2_N <<-  array(NA, dim=1)
+}
+
+findSteadyState = function() {
+    Tpars <<- c( Inputs = Inputs, VMAX = VMAX, KM = KM, CUE = CUE, 
+                 fPHYS = fPHYS, fCHEM = fCHEM, fAVAI = fAVAI, FI = FI, 
+                 turnover = turnover, LITmin = LITmin, SOMmin = SOMmin, MICtrn = MICtrn, 
+                 desorb = desorb, DEsorb = DEsorb, OXIDAT = OXIDAT,
+                 LITminN = LITminN, SOMminN = SOMminN, MICtrnN = MICtrnN,
+                 DEsorbN = DEsorbN, OXIDATN = OXIDATN,
+                 KO = KO,
+                 CNup=CNup, DINup=DINup,Nspill=Nspill, Overflow=Overflow, 
+                 upMIC_1=upMIC_1, upMIC_1_N=upMIC_1_N,
+                 upMIC_2=upMIC_2, upMIC_2_N=upMIC_2_N,
+                 NUE=NUE, CN_m=CN_m, CN_s=CN_s, CN_r=CN_r, CN_K=CN_K,Nleak=Nleak,densDep=densDep)
+    Ty    <<- c(LIT_1 = LIT_1, LIT_2 = LIT_2, 
+                MIC_1 = MIC_1, MIC_2 = MIC_2, 
+                SOM_1 = SOM_1, SOM_2 = SOM_2, SOM_3 = SOM_3,
+                LIT_1_N = LIT_1_N, LIT_2_N = LIT_2_N, 
+                MIC_1_N = MIC_1_N, MIC_2_N = MIC_2_N, 
+                SOM_1_N = SOM_1_N, SOM_2_N = SOM_2_N, SOM_3_N = SOM_3_N,
+                DIN = DIN)
+    test  <<- stode(y = Ty, time = 1E8, fun = FXEQ, parms = Tpars, positive = TRUE)
+    test[[1]]
+}
+
+
+
+ode_steadyState <- function(){
+    Tpars <<- c( Inputs = Inputs, VMAX = VMAX, KM = KM, CUE = CUE, 
+                 fPHYS = fPHYS, fCHEM = fCHEM, fAVAI = fAVAI, FI = FI, 
+                 turnover = turnover, LITmin = LITmin, SOMmin = SOMmin, MICtrn = MICtrn, 
+                 desorb = desorb, DEsorb = DEsorb, OXIDAT = OXIDAT,
+                 LITminN = LITminN, SOMminN = SOMminN, MICtrnN = MICtrnN,
+                 DEsorbN = DEsorbN, OXIDATN = OXIDATN,
+                 KO = KO,
+                 CNup=CNup, DINup=DINup,Nspill=Nspill, Overflow=Overflow, 
+                 upMIC_1=upMIC_1, upMIC_1_N=upMIC_1_N,
+                 upMIC_2=upMIC_2, upMIC_2_N=upMIC_2_N,
+                 NUE=NUE, CN_m=CN_m, CN_s=CN_s, CN_r=CN_r, CN_K=CN_K,Nleak=Nleak,densDep=densDep)
+    Ty    <<- c(LIT_1 = LIT_1, LIT_2 = LIT_2, 
+                MIC_1 = MIC_1, MIC_2 = MIC_2, 
+                SOM_1 = SOM_1, SOM_2 = SOM_2, SOM_3 = SOM_3,
+                LIT_1_N = LIT_1_N, LIT_2_N = LIT_2_N, 
+                MIC_1_N = MIC_1_N, MIC_2_N = MIC_2_N, 
+                SOM_1_N = SOM_1_N, SOM_2_N = SOM_2_N, SOM_3_N = SOM_3_N,
+                DIN = DIN)
+    
+    t_1 <- 1:90000
+    
+    ode_solve <- ode(y = Ty, times = t_1, func = FXEQ, parms = Tpars)
+    
+    return(ode_solve)
+}
+
+
+outputSteadyState <- function(){
+    LIT_1    <<- test[[1]][[1]]
+    LIT_2    <<- test[[1]][[2]]
+    MIC_1    <<- test[[1]][[3]]
+    MIC_2    <<- test[[1]][[4]]
+    SOM_1    <<- test[[1]][[5]]
+    SOM_2    <<- test[[1]][[6]]
+    SOM_3    <<- test[[1]][[7]]
+    
+    LIT_1_N    <<- test[[1]][[8]]
+    LIT_2_N    <<- test[[1]][[9]]
+    MIC_1_N    <<- test[[1]][[10]]
+    MIC_2_N    <<- test[[1]][[11]]
+    SOM_1_N    <<- test[[1]][[12]]
+    SOM_2_N    <<- test[[1]][[13]]
+    SOM_3_N    <<- test[[1]][[14]]
+    DIN        <<- test[[1]][[15]]
+    Site <<- strSite[s]
+    
+    #Carbon fluxes
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #Flows to and from MIC_1
+    LITmin[1] = MIC_1 * VMAX[1] * LIT_1 / (KM[1] + LIT_1)   #MIC_1 decomp of MET lit
+    LITmin[2] = MIC_1 * VMAX[2] * LIT_2 / (KM[2] + LIT_2)   #MIC_1 decomp of STRUC lit
+    SOMmin[1] = MIC_1 * VMAX[3] * SOM_3 / (KM[3] + SOM_3)   #decomp of SOMa by MIC_1
+    LITmin[3] = MIC_2 * VMAX[4] * LIT_1 / (KM[4] + LIT_1)   #decomp of MET litter
+    LITmin[4] = MIC_2 * VMAX[5] * LIT_2 / (KM[5] + LIT_2)   #decomp of SRUCTURAL litter
+    SOMmin[2] = MIC_2 * VMAX[6] * SOM_3 / (KM[6] + SOM_3)   #decomp of SOMa by MIC_2
+    
+    #Nitrogen fluxes
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #Flows to and from MIC_1
+    LITminN[1] =  LITmin[1]*LIT_1_N/(LIT_1+1e-100)#LITmin[1]/CN_m
+    LITminN[2] =  LITmin[2]*LIT_2_N/(LIT_2++1e-100)#LITmin[2]/CN_s
+    SOMminN[1] =  SOMmin[1]*(SOM_3_N/(SOM_3++1e-100))#SOMmin[1]*(SOM_3_N/SOM_3)#*relRateN
+    LITminN[3] =  LITmin[3]*LIT_1_N/(LIT_1+1e-100)#LITmin[3]/CN_m
+    LITminN[4] =  LITmin[4]*LIT_2_N/(LIT_2+1e-100)#LITmin[4]/CN_s
+    SOMminN[2] =  SOMmin[2]*(SOM_3_N/(SOM_3+1e-100))#SOMmin[2]*(SOM_3_N/SOM_3)#*relRateN
+    DINup[1]   = (1-Nleak)*DIN*MIC_1/(MIC_1+MIC_2+1e-100) #Partitions available DIN between microbial pools based on relative biomass
+    DINup[2]   = (1-Nleak)*DIN*MIC_2/(MIC_1+MIC_2+1e-100)
+    
+    #####
+    upMIC_1    = CUE[1]*(LITmin[1] + SOMmin[1]) + CUE[2]*(LITmin[2])
+    upMIC_1_N  = NUE*(LITminN[1] + SOMminN[1]) + NUE*(LITminN[2]) + DINup[1]
+    CNup[1]    = (upMIC_1)/(upMIC_1_N+1e-100) #Trying to optimize run speed here by avoiding /0
+    Overflow[1] = (upMIC_1) - (upMIC_1_N)*min(CN_r, CNup[1])
+    Nspill[1]   = (upMIC_1_N) - (upMIC_1)/max(CN_r, CNup[1])
+    
+    upMIC_2    = CUE[3]*(LITmin[3] + SOMmin[2]) + CUE[4]*(LITmin[4])
+    upMIC_2_N  = NUE*(LITminN[3] + SOMminN[2]) + NUE*(LITminN[4]) + DINup[2]
+    CNup[2]    = (upMIC_2)/(upMIC_2_N+1e-100)
+    Overflow[2] = (upMIC_2) - (upMIC_2_N)*min(CN_K, CNup[2])
+    Nspill[2]   = (upMIC_2_N) - (upMIC_2)/max(CN_K, CNup[2])
+    ######
+    
+    dLIT_1 = Inputs[1]*(1-FI[1]) - LITmin[1] - LITmin[3]
+    dLIT_2 = Inputs[2]*(1-FI[2]) - LITmin[2] - LITmin[4]
+    dMIC_1 = CUE[1]*(LITmin[1] + SOMmin[1]) + CUE[2]*(LITmin[2]) - sum(MICtrn[1:3]) - Overflow[1]
+    dMIC_2 = CUE[3]*(LITmin[3] + SOMmin[2]) + CUE[4]*(LITmin[4]) - sum(MICtrn[4:6]) - Overflow[2] 
+    dSOM_1 = Inputs[1]*FI[1] + MICtrn[1] + MICtrn[4] - DEsorb 
+    dSOM_2 = Inputs[2]*FI[2] + MICtrn[2] + MICtrn[5] - OXIDAT
+    dSOM_3 = MICtrn[3] + MICtrn[6] + DEsorb + OXIDAT - SOMmin[1] - SOMmin[2]
+    
+    dLIT_1_N = Inputs[1]*(1-FI[1])/CN_m - LITminN[1] - LITminN[3]
+    dLIT_2_N = Inputs[2]*(1-FI[2])/CN_s - LITminN[2] - LITminN[4]
+    dMIC_1_N = NUE*(LITminN[1] + SOMminN[1]) + NUE*(LITminN[2]) - sum(MICtrnN[1:3]) + DINup[1] - Nspill[1]
+    dMIC_2_N = NUE*(LITminN[3] + SOMminN[2]) + NUE*(LITminN[4]) - sum(MICtrnN[4:6]) + DINup[2] - Nspill[2]
+    dSOM_1_N = Inputs[1]*FI[1]/CN_m + MICtrnN[1] + MICtrnN[4] - DEsorbN
+    dSOM_2_N = Inputs[2]*FI[2]/CN_s + MICtrnN[2] + MICtrnN[5] - OXIDATN
+    dSOM_3_N = MICtrnN[3] + MICtrnN[6] + DEsorbN + OXIDATN - SOMminN[1] - SOMminN[2]
+    
+    dDIN = (1-NUE)*(LITminN[1] + LITminN[2] + SOMminN[1]) +  #Inputs from r decomp
+        (1-NUE)*(LITminN[3] + LITminN[4] + SOMminN[2]) +  #Inputs from K decomp
+        Nspill[1] + Nspill[2] - DINup[1] - DINup[2]    #Uptake to microbial pools and spillage
+    LeachingLoss = Nleak*DIN
+    dDIN = dDIN-LeachingLoss #N leaching losses    
+    
+    Resp=(1-CUE[1])*(LITmin[1]+ SOMmin[1]) + (1-CUE[2])*(LITmin[2]) +
+        (1-CUE[3])*(LITmin[3]+ SOMmin[2]) + (1-CUE[4])*(LITmin[4]) + Overflow[1] + Overflow[2]
+    NminTot=(1-NUE)*(LITminN[1] + LITminN[2] + SOMminN[1]) +  #Inputs from r decomp
+        (1-NUE)*(LITminN[3] + LITminN[4] + SOMminN[2]) +  #Inputs from K decomp
+        Nspill[1] + Nspill[2]
+    NminNet=NminTot-DINup[1]-DINup[2]
+    
+    newrow <<- cbind.data.frame(Site, MIC_1,MIC_2,LIT_1,LIT_2,SOM_1,SOM_2,SOM_3,
+                                MIC_1_N,MIC_2_N,LIT_1_N,LIT_2_N,SOM_1_N,SOM_2_N,SOM_3_N,DIN, 
+                                NminTot,NminNet,Resp,
+                                stringsAsFactors = FALSE)
+    SSoutput[s,] <<- newrow
+}
+```
+
+```{r}
+x1 <- range(1,length(LTERdata$Site))
+t1 <- as.list(x1[1]:x1[2])
+ode_vector <- vector('list', length = length(t1))
+valiSites <- t1
+
+for(s in valiSites){
+    #Find steady state solution, plot to examine and output values to table
+    siteSpecificParameters()
+    initializePools()
+    #findSteadyState()
+    #outputSteadyState()
+    new_out_ODE <- ode_steadyState()
+    assign(paste0('meanODE', s), new_out_ODE)
+    #ode_vector[i] <- new_out_ODE
+    
+} #finish site loop
+
+```
+
+
+```{r}
+
+FXEQ <- function(t, y, pars) {
+    with (as.list(c(y, pars)),{
+        
+        #Carbon fluxes
+        #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        #Flows to and from MIC_1
+        LITmin[1] = MIC_1 * VMAX[1] * LIT_1 / (KM[1] + LIT_1)#LIT_1)   #MIC_1 decomp of MET lit
+        LITmin[2] = MIC_1 * VMAX[2] * LIT_2 / (KM[2] + LIT_2)#LIT_2)   #MIC_1 decomp of STRUC lit
+        SOMmin[1] = MIC_1 * VMAX[3] * SOM_3 / (KM[3] + SOM_3)#SOM_3)   #decomp of SOMa by MIC_1
+        MICtrn[1] = MIC_1^densDep * turnover[1]  * fPHYS[1] #MIC_1 turnover to PHYSICAL SOM
+        MICtrn[2] = MIC_1^densDep * turnover[1]  * fCHEM[1] #MIC_1 turnover to CHEMICAL SOM
+        MICtrn[3] = MIC_1^densDep * turnover[1]  * fAVAI[1] #MIC_1 turnover to AVAILABLE SOM
+        
+        #Flows to and from MIC_2
+        LITmin[3] = MIC_2 * VMAX[4] * LIT_1 / (KM[4] + LIT_1)#LIT_1)   #decomp of MET litter
+        LITmin[4] = MIC_2 * VMAX[5] * LIT_2 / (KM[5] + LIT_2)#LIT_2)   #decomp of SRUCTURAL litter
+        SOMmin[2] = MIC_2 * VMAX[6] * SOM_3 / (KM[6] + SOM_3)#SOM_3)   #decomp of SOMa by MIC_2
+        MICtrn[4] = MIC_2^densDep * turnover[2]  * fPHYS[2]                  #MIC_2 turnover to PHYSICAL  SOM
+        MICtrn[5] = MIC_2^densDep * turnover[2]  * fCHEM[2]                  #MIC_2 turnover to CHEMICAL  SOM
+        MICtrn[6] = MIC_2^densDep * turnover[2]  * fAVAI[2]                  #MIC_2 turnover to AVAILABLE SOM
+        
+        DEsorb    = SOM_1 * desorb  #* (MIC_1 + MIC_2)		#desorbtion of PHYS to AVAIL (function of fCLAY)
+        OXIDAT    = ((MIC_2 * VMAX[5] * SOM_2 / (KO[2]*KM[5] + SOM_2)) +#SOM_2)) +
+                         (MIC_1 * VMAX[2] * SOM_2 / (KO[1]*KM[2] + SOM_2)))#SOM_2)))  #oxidation of C to A
+        
+        #Nitrogen fluxes
+        #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        #Flows to and from MIC_1
+        LITminN[1] =  LITmin[1]*LIT_1_N/(LIT_1+1e-100)#LITmin[1]/CN_m
+        LITminN[2] =  LITmin[2]*LIT_2_N/(LIT_2++1e-100)#LITmin[2]/CN_s
+        SOMminN[1] =  SOMmin[1]*(SOM_3_N/(SOM_3++1e-100))#SOMmin[1]*(SOM_3_N/SOM_3)#*relRateN
+        MICtrnN[1] =  MICtrn[1]*MIC_1_N/(MIC_1+1e-100)#MICtrn[1]/CN_r
+        MICtrnN[2] =  MICtrn[2]*MIC_1_N/(MIC_1+1e-100)#MICtrn[2]/CN_r
+        MICtrnN[3] =  MICtrn[3]*MIC_1_N/(MIC_1+1e-100)#MICtrn[3]/CN_r
+        
+        #Flows to and from MIC_2
+        LITminN[3] =  LITmin[3]*LIT_1_N/(LIT_1+1e-100)#LITmin[3]/CN_m
+        LITminN[4] =  LITmin[4]*LIT_2_N/(LIT_2+1e-100)#LITmin[4]/CN_s
+        SOMminN[2] =  SOMmin[2]*(SOM_3_N/(SOM_3+1e-100))#SOMmin[2]*(SOM_3_N/SOM_3)#*relRateN
+        MICtrnN[4] =  MICtrn[4]*MIC_2_N/(MIC_2+1e-100)#MICtrn[4]/CN_K
+        MICtrnN[5] =  MICtrn[5]*MIC_2_N/(MIC_2+1e-100)#MICtrn[5]/CN_K
+        MICtrnN[6] =  MICtrn[6]*MIC_2_N/(MIC_2+1e-100)#MICtrn[6]/CN_K
+        
+        DEsorbN    =  DEsorb[1]*(SOM_1_N/(SOM_1+1e-100))#*relRateN
+        OXIDATN    =  OXIDAT[1]*(SOM_2_N/(SOM_2+1e-100))#*relRateN
+        DINup[1]   = (1-Nleak)*DIN*MIC_1/(MIC_1+MIC_2+1e-100) #Partitions DIN between microbial pools based on relative biomass
+        DINup[2]   = (1-Nleak)*DIN*MIC_2/(MIC_1+MIC_2+1e-100)
+        
+        #####
+        upMIC_1    = CUE[1]*(LITmin[1] + SOMmin[1]) + CUE[2]*(LITmin[2])
+        upMIC_1_N  = NUE*(LITminN[1] + SOMminN[1]) + NUE*(LITminN[2]) + DINup[1]
+        CNup[1]    = (upMIC_1)/(upMIC_1_N+1e-100) #Trying to optimize run speed here by avoiding /0
+        Overflow[1] = (upMIC_1) - (upMIC_1_N)*min(CN_r, CNup[1])
+        Nspill[1]   = (upMIC_1_N) - (upMIC_1)/max(CN_r, CNup[1])
+        
+        upMIC_2    = CUE[3]*(LITmin[3] + SOMmin[2]) + CUE[4]*(LITmin[4])
+        upMIC_2_N  = NUE*(LITminN[3] + SOMminN[2]) + NUE*(LITminN[4]) + DINup[2]
+        CNup[2]    = (upMIC_2)/(upMIC_2_N+1e-100)
+        Overflow[2] = (upMIC_2) - (upMIC_2_N)*min(CN_K, CNup[2])
+        Nspill[2]   = (upMIC_2_N) - (upMIC_2)/max(CN_K, CNup[2])
+        ######
+        
+        dLIT_1 = Inputs[1]*(1-FI[1]) - LITmin[1] - LITmin[3]
+        dLIT_2 = Inputs[2]*(1-FI[2]) - LITmin[2] - LITmin[4]
+        dMIC_1 = CUE[1]*(LITmin[1] + SOMmin[1]) + CUE[2]*(LITmin[2]) - sum(MICtrn[1:3]) - Overflow[1]
+        dMIC_2 = CUE[3]*(LITmin[3] + SOMmin[2]) + CUE[4]*(LITmin[4]) - sum(MICtrn[4:6]) - Overflow[2] 
+        dSOM_1 = Inputs[1]*FI[1] + MICtrn[1] + MICtrn[4] - DEsorb 
+        dSOM_2 = Inputs[2]*FI[2] + MICtrn[2] + MICtrn[5] - OXIDAT
+        dSOM_3 = MICtrn[3] + MICtrn[6] + DEsorb + OXIDAT - SOMmin[1] - SOMmin[2]
+        
+        dLIT_1_N = Inputs[1]*(1-FI[1])/CN_m - LITminN[1] - LITminN[3]
+        dLIT_2_N = Inputs[2]*(1-FI[2])/CN_s - LITminN[2] - LITminN[4]
+        dMIC_1_N = NUE*(LITminN[1] + SOMminN[1]) + NUE*(LITminN[2]) - sum(MICtrnN[1:3]) + DINup[1] - Nspill[1]
+        dMIC_2_N = NUE*(LITminN[3] + SOMminN[2]) + NUE*(LITminN[4]) - sum(MICtrnN[4:6]) + DINup[2] - Nspill[2]
+        dSOM_1_N = Inputs[1]*FI[1]/CN_m + MICtrnN[1] + MICtrnN[4] - DEsorbN
+        dSOM_2_N = Inputs[2]*FI[2]/CN_s + MICtrnN[2] + MICtrnN[5] - OXIDATN
+        dSOM_3_N = MICtrnN[3] + MICtrnN[6] + DEsorbN + OXIDATN - SOMminN[1] - SOMminN[2]
+        
+        dDIN = (1-NUE)*(LITminN[1] + LITminN[2] + SOMminN[1]) +  #Inputs from r decomp
+            (1-NUE)*(LITminN[3] + LITminN[4] + SOMminN[2]) +  #Inputs from K decomp
+            Nspill[1] + Nspill[2] - DINup[1] - DINup[2]    #Uptake to microbial pools and spillage
+        LeachingLoss = Nleak*DIN
+        dDIN = dDIN-LeachingLoss #N leaching losses    
+        
+        list(c(dLIT_1, dLIT_2, dMIC_1, dMIC_2, dSOM_1, dSOM_2, dSOM_3,dLIT_1_N, dLIT_2_N, dMIC_1_N, dMIC_2_N, dSOM_1_N, dSOM_2_N, dSOM_3_N,dDIN))
+    })
+}
+
+
+TFXEQ <- function(t, y, pars) {
+    with (as.list(c(y, pars)),{
+        
+        #Carbon fluxes
+        #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        #Flows to and from MIC_1
+        LITmin[1] = MIC_1 * VMAX[1] * LIT_1 / (KM[1] + LIT_1)#LIT_1)   #MIC_1 decomp of MET lit
+        LITmin[2] = MIC_1 * VMAX[2] * LIT_2 / (KM[2] + LIT_2)#LIT_2)   #MIC_1 decomp of STRUC lit
+        SOMmin[1] = MIC_1 * VMAX[3] * SOM_3 / (KM[3] + SOM_3)#SOM_3)   #decomp of SOMa by MIC_1
+        MICtrn[1] = MIC_1^densDep * turnover[1]  * fPHYS[1] #MIC_1 turnover to PHYSICAL SOM
+        MICtrn[2] = MIC_1^densDep * turnover[1]  * fCHEM[1] #MIC_1 turnover to CHEMICAL SOM
+        MICtrn[3] = MIC_1^densDep * turnover[1]  * fAVAI[1] #MIC_1 turnover to AVAILABLE SOM
+        
+        #Flows to and from MIC_2
+        LITmin[3] = MIC_2 * VMAX[4] * LIT_1 / (KM[4] + LIT_1)#LIT_1)   #decomp of MET litter
+        LITmin[4] = MIC_2 * VMAX[5] * LIT_2 / (KM[5] + LIT_2)#LIT_2)   #decomp of SRUCTURAL litter
+        SOMmin[2] = MIC_2 * VMAX[6] * SOM_3 / (KM[6] + SOM_3)#SOM_3)   #decomp of SOMa by MIC_2
+        MICtrn[4] = MIC_2^densDep * turnover[2]  * fPHYS[2]                  #MIC_2 turnover to PHYSICAL  SOM
+        MICtrn[5] = MIC_2^densDep * turnover[2]  * fCHEM[2]                  #MIC_2 turnover to CHEMICAL  SOM
+        MICtrn[6] = MIC_2^densDep * turnover[2]  * fAVAI[2]                  #MIC_2 turnover to AVAILABLE SOM
+        
+        DEsorb    = SOM_1 * desorb  #* (MIC_1 + MIC_2)		#desorbtion of PHYS to AVAIL (function of fCLAY)
+        OXIDAT    = ((MIC_2 * VMAX[5] * SOM_2 / (KO[2]*KM[5] + SOM_2)) +#SOM_2)) +
+                         (MIC_1 * VMAX[2] * SOM_2 / (KO[1]*KM[2] + SOM_2)))#SOM_2)))  #oxidation of C to A
+        
+        #Nitrogen fluxes
+        #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        #Flows to and from MIC_1
+        LITminN[1] =  LITmin[1]*LIT_1_N/(LIT_1+1e-100)#LITmin[1]/CN_m
+        LITminN[2] =  LITmin[2]*LIT_2_N/(LIT_2++1e-100)#LITmin[2]/CN_s
+        SOMminN[1] =  SOMmin[1]*(SOM_3_N/(SOM_3++1e-100))#SOMmin[1]*(SOM_3_N/SOM_3)#*relRateN
+        MICtrnN[1] =  MICtrn[1]*MIC_1_N/(MIC_1+1e-100)#MICtrn[1]/CN_r
+        MICtrnN[2] =  MICtrn[2]*MIC_1_N/(MIC_1+1e-100)#MICtrn[2]/CN_r
+        MICtrnN[3] =  MICtrn[3]*MIC_1_N/(MIC_1+1e-100)#MICtrn[3]/CN_r
+        
+        #Flows to and from MIC_2
+        LITminN[3] =  LITmin[3]*LIT_1_N/(LIT_1+1e-100)#LITmin[3]/CN_m
+        LITminN[4] =  LITmin[4]*LIT_2_N/(LIT_2+1e-100)#LITmin[4]/CN_s
+        SOMminN[2] =  SOMmin[2]*(SOM_3_N/(SOM_3+1e-100))#SOMmin[2]*(SOM_3_N/SOM_3)#*relRateN
+        MICtrnN[4] =  MICtrn[4]*MIC_2_N/(MIC_2+1e-100)#MICtrn[4]/CN_K
+        MICtrnN[5] =  MICtrn[5]*MIC_2_N/(MIC_2+1e-100)#MICtrn[5]/CN_K
+        MICtrnN[6] =  MICtrn[6]*MIC_2_N/(MIC_2+1e-100)#MICtrn[6]/CN_K
+        
+        DEsorbN    =  DEsorb[1]*(SOM_1_N/(SOM_1+1e-100))#*relRateN
+        OXIDATN    =  OXIDAT[1]*(SOM_2_N/(SOM_2+1e-100))#*relRateN
+        DINup[1]   = (1-Nleak)*DIN*MIC_1/(MIC_1+MIC_2+1e-100) #Partitions available DIN between microbial pools based on relative biomass
+        DINup[2]   = (1-Nleak)*DIN*MIC_2/(MIC_1+MIC_2+1e-100)
+        
+        #####
+        upMIC_1    = CUE[1]*(LITmin[1] + SOMmin[1]) + CUE[2]*(LITmin[2])
+        upMIC_1_N  = NUE*(LITminN[1] + SOMminN[1]) + NUE*(LITminN[2]) + DINup[1]
+        CNup[1]    = (upMIC_1)/(upMIC_1_N+1e-100) #Trying to optimize run speed here by avoiding /0
+        Overflow[1] = (upMIC_1) - (upMIC_1_N)*min(CN_r, CNup[1])
+        Nspill[1]   = (upMIC_1_N) - (upMIC_1)/max(CN_r, CNup[1])
+        
+        upMIC_2    = CUE[3]*(LITmin[3] + SOMmin[2]) + CUE[4]*(LITmin[4])
+        upMIC_2_N  = NUE*(LITminN[3] + SOMminN[2]) + NUE*(LITminN[4]) + DINup[2]
+        CNup[2]    = (upMIC_2)/(upMIC_2_N+1e-100)
+        Overflow[2] = (upMIC_2) - (upMIC_2_N)*min(CN_K, CNup[2])
+        Nspill[2]   = (upMIC_2_N) - (upMIC_2)/max(CN_K, CNup[2])
+        ######
+        
+        dLIT_1 = Inputs[1]*(1-FI[1]) - LITmin[1] - LITmin[3]
+        dLIT_2 = Inputs[2]*(1-FI[2]) - LITmin[2] - LITmin[4]
+        dMIC_1 = CUE[1]*(LITmin[1] + SOMmin[1]) + CUE[2]*(LITmin[2]) - sum(MICtrn[1:3]) - Overflow[1]
+        dMIC_2 = CUE[3]*(LITmin[3] + SOMmin[2]) + CUE[4]*(LITmin[4]) - sum(MICtrn[4:6]) - Overflow[2] 
+        dSOM_1 = Inputs[1]*FI[1] + MICtrn[1] + MICtrn[4] - DEsorb 
+        dSOM_2 = Inputs[2]*FI[2] + MICtrn[2] + MICtrn[5] - OXIDAT
+        dSOM_3 = MICtrn[3] + MICtrn[6] + DEsorb + OXIDAT - SOMmin[1] - SOMmin[2]
+        
+        dLIT_1_N = Inputs[1]*(1-FI[1])/CN_m - LITminN[1] - LITminN[3]
+        dLIT_2_N = Inputs[2]*(1-FI[2])/CN_s - LITminN[2] - LITminN[4]
+        dMIC_1_N = NUE*(LITminN[1] + SOMminN[1]) + NUE*(LITminN[2]) - sum(MICtrnN[1:3]) + DINup[1] - Nspill[1]
+        dMIC_2_N = NUE*(LITminN[3] + SOMminN[2]) + NUE*(LITminN[4]) - sum(MICtrnN[4:6]) + DINup[2] - Nspill[2]
+        dSOM_1_N = Inputs[1]*FI[1]/CN_m + MICtrnN[1] + MICtrnN[4] - DEsorbN
+        dSOM_2_N = Inputs[2]*FI[2]/CN_s + MICtrnN[2] + MICtrnN[5] - OXIDATN
+        dSOM_3_N = MICtrnN[3] + MICtrnN[6] + DEsorbN + OXIDATN - SOMminN[1] - SOMminN[2]
+        
+        dDIN = (1-NUE)*(LITminN[1] + LITminN[2] + SOMminN[1]) +  #Inputs from r decomp
+            (1-NUE)*(LITminN[3] + LITminN[4] + SOMminN[2]) +  #Inputs from K decomp
+            Nspill[1] + Nspill[2] - DINup[1] - DINup[2]    #Uptake to microbial pools and spillage
+        LeachingLoss = Nleak*DIN
+        dDIN = dDIN-LeachingLoss #N leaching losses  
+        
+        #Tracer tier calculations
+        # III. Carbon, tracer
+        TLITmin[1] = TLIT_1/LIT_1*LITmin[1]   #MIC_1 decomp of MET lit
+        TLITmin[2] = TLIT_2/LIT_2*LITmin[2]   #MIC_1 decomp of STRUC lit
+        TSOMmin[1] = TSOM_3/SOM_3*SOMmin[1]   #Decomp of SOMa by MIC_1
+        TMICtrn[1] = TMIC_1/MIC_1*MICtrn[1]   #MIC_1 turnover to SOMp
+        TMICtrn[2] = TMIC_1/MIC_1*MICtrn[2]   #MIC_1 turnover to SOMc
+        TMICtrn[3] = TMIC_1/MIC_1*MICtrn[3]   #MIC_1 turnover to SOMa
+        
+        #Flows to and from MIC_2
+        TLITmin[3] = TLIT_1/LIT_1*LITmin[3]   #decomp of MET litter
+        TLITmin[4] = TLIT_2/LIT_2*LITmin[4]   #decomp of SRUCTURAL litter
+        TSOMmin[2] = TSOM_3/SOM_3*SOMmin[2]   #decomp of PHYSICAL SOM by MIC_1
+        TMICtrn[4] = TMIC_2/MIC_2*MICtrn[4]   #MIC_2 turnover to SOMp
+        TMICtrn[5] = TMIC_2/MIC_2*MICtrn[5]   #MIC_2 turnover to SOMc
+        TMICtrn[6] = TMIC_2/MIC_2*MICtrn[6]   #MIC_2 turnover to SOMa
+        
+        TDEsorb[1]    = TSOM_1/SOM_1*DEsorb[1]#SOM_1[2] * desorb  #* (MIC_1 + MIC_2)  #desorbtion of PHYS to AVAIL (function of fCLAY)
+        TOXIDAT[1]    = TSOM_2/SOM_2*OXIDAT[1]
+        
+        #Flows to and from MIC_1
+        TLITminN[1] =  TLITmin[1]*TLIT_1_N/(TLIT_1+1e-100)
+        TLITminN[2] =  TLITmin[2]*TLIT_2_N/(TLIT_2+1e-100)
+        TMICtrnN[1] =  TMICtrn[1]*TMIC_1_N/(TMIC_1+1e-100)
+        TMICtrnN[2] =  TMICtrn[2]*TMIC_1_N/(TMIC_1+1e-100)
+        TMICtrnN[3] =  TMICtrn[3]*TMIC_1_N/(TMIC_1+1e-100)
+        TSOMminN[1] =  TSOMmin[1]*TSOM_3_N/(TSOM_3+1e-100)  
+        
+        #Flows to and from MIC_2
+        TLITminN[3] =  TLITmin[3]*TLIT_1_N/(TLIT_1+1e-100)
+        TLITminN[4] =  TLITmin[4]*TLIT_2_N/(TLIT_2+1e-100)
+        TMICtrnN[4] =  TMICtrn[4]*TMIC_2_N/(TMIC_2+1e-100)
+        TMICtrnN[5] =  TMICtrn[5]*TMIC_2_N/(TMIC_2+1e-100)
+        TMICtrnN[6] =  TMICtrn[6]*TMIC_2_N/(TMIC_2+1e-100)
+        TSOMminN[2] =  TSOMmin[2]*TSOM_3_N/(TSOM_3+1e-100)
+        
+        TDEsorbN =  TDEsorb*TSOM_1_N/(TSOM_1+1e-100)
+        TOXIDATN =  TOXIDAT*TSOM_2_N/(TSOM_2+1e-100)
+        TDINup[1] = TDIN/(DIN+1e-100)*DINup[1]
+        TDINup[2] = TDIN/(DIN+1e-100)*DINup[2]
+        
+        #####
+        TNimport[1] = fracNImportr*LeachingLoss
+        TNimport[2] = fracNImportK*LeachingLoss
+        
+        upTMIC_1    = CUE[1]*(TLITmin[1] + TSOMmin[1]) + CUE[2]*TLITmin[2]
+        upTMIC_1_N  = NUE*(TLITminN[1] + TSOMminN[1]) + NUE*TLITminN[2] + TDINup[1] + TNimport[1]
+        TCNup[1]    = upTMIC_1/(upTMIC_1_N+1e-100)
+        TOverflow[1] = upTMIC_1 - upTMIC_1_N*min(CN_r, TCNup[1])
+        TNspill[1]   = upTMIC_1_N - upTMIC_1/max(CN_r, TCNup[1])
+        
+        upTMIC_2    = CUE[3]*(TLITmin[3] + TSOMmin[2]) + CUE[4]*TLITmin[4]
+        upTMIC_2_N  = NUE*(TLITminN[3] + TSOMminN[2]) + NUE*TLITminN[4] + TDINup[2] + TNimport[2]
+        TCNup[2]    = upTMIC_2/(upTMIC_2_N+1e-100)
+        TOverflow[2] = upTMIC_2 - upTMIC_2_N*min(CN_K, TCNup[2])
+        TNspill[2]   = upTMIC_2_N - upTMIC_2/max(CN_K, TCNup[2])
+        ######
+        
+        dTLIT_1 = - TLITmin[1] - TLITmin[3]
+        dTLIT_2 = - TLITmin[2] - TLITmin[4]
+        dTMIC_1 = CUE[1]*(TLITmin[1] + TSOMmin[1]) + CUE[2]*TLITmin[2] - sum(TMICtrn[1:3]) - TOverflow[1]
+        dTMIC_2 = CUE[3]*(TLITmin[3] + TSOMmin[2]) + CUE[4]*TLITmin[4] - sum(TMICtrn[4:6]) - TOverflow[2]
+        dTSOM_1 = TMICtrn[1] + TMICtrn[4] - TDEsorb[1]
+        dTSOM_2 = TMICtrn[2] + TMICtrn[5] - TOXIDAT[1]
+        dTSOM_3 = TMICtrn[3] + TMICtrn[6] + TDEsorb[1] + TOXIDAT[1] - TSOMmin[1] - TSOMmin[2] 
+        
+        dTLIT_1_N = - TLITminN[1] - TLITminN[3]
+        dTLIT_2_N = - TLITminN[2] - TLITminN[4]
+        dTMIC_1_N = NUE*TLITminN[1] + NUE*TLITminN[2] - sum(TMICtrnN[1:3]) + TDINup[1] + NUE*TSOMminN[1] + TNimport[1] - TNspill[1]
+        dTMIC_2_N = NUE*TLITminN[3] + NUE*TLITminN[4] - sum(TMICtrnN[4:6]) + TDINup[2] + NUE*TSOMminN[2] + TNimport[2] - TNspill[2]
+        dTSOM_1_N = TMICtrnN[1] + TMICtrnN[4] - TDEsorbN[1]
+        dTSOM_2_N = TMICtrnN[2] + TMICtrnN[5] - TOXIDATN[1]
+        dTSOM_3_N = TMICtrn[3]/CN_r + TMICtrn[6]/CN_K + TDEsorbN[1] + TOXIDATN[1] - TSOMminN[1] - TSOMminN[2]
+        
+        dTDIN = (1-NUE)*(TLITminN[1] + TLITminN[2] + TSOMminN[1]) +  #Inputs from r decomp
+            (1-NUE)*(TLITminN[3] + TLITminN[4] + TSOMminN[2]) +  #Inputs from K decomp
+            TNspill[1] + TNspill[2] - TDINup[1] - TDINup[2]    #Uptake to microbial pools and spillage
+        dTDIN = dTDIN-(Nleak)*TDIN #N leaching losses
+        
+        list(c(dLIT_1, dLIT_2, dMIC_1, dMIC_2, dSOM_1, dSOM_2, dSOM_3, dLIT_1_N, 
+               dLIT_2_N, dMIC_1_N, dMIC_2_N, dSOM_1_N, dSOM_2_N, dSOM_3_N, dDIN,
+               dTLIT_1, dTLIT_2, dTMIC_1, dTMIC_2, dTSOM_1, dTSOM_2, dTSOM_3, dTLIT_1_N, 
+               dTLIT_2_N, dTMIC_1_N, dTMIC_2_N, dTSOM_1_N, dTSOM_2_N, dTSOM_3_N, dTDIN))
+    })
+}
+
+
+SSoutput <<- data.frame(matrix(NA,nrow=14, ncol=19))
+colnames(SSoutput) = c("Site", "MICr","MICK","LITm","LITs","SOMp","SOMc","SOMa",
+                       "MICrN","MICKN","LITmN","LITsN","SOMpN","SOMcN","SOMaN","InorgN",
+                       "NminTot","NminNet","Resp")
+
+
+LITtype  <<- c('TRAEf', 'PIREf','THPLf','ACSAf','QUPRf','DRGLf')
+bagMET   <<- c(10.6, 36.2, 37.4, 56.8, 37.1, 49.3) #from Gordon's LitterCharacteristics.txt
+bagLIG   <<- c(16.2, 19.2, 26.7, 15.9, 23.5, 10.9) # % from Gordon's LitterCharacteristics.txt
+bagN     <<- c(0.38, 0.59, 0.62, 0.81, 1.03, 1.97) # %N 
+bagCN    <<- c(133.3,92.7, 83.1, 61.8, 50.5, 24.2)
+calcN    <<- (1 / bagCN) / 2.5 * 100
+calcMET  <<- 0.85 - 0.013 * bagLIG/calcN #as calculated in DAYCENT
+bagMET   <<- calcMET
+
+LTERdata = read.csv("LTER_SITE_max.csv") #site level forcing variables
+ANPP_C  <<- LTERdata$ANPP      # convert to gC/m2/y from g/m2/y
+strSite <<- as.character(LTERdata$Site)  #convert site names to string
+nsites  <<- length(strSite)
+npts   <<- 6*10*14 #6 litter * 10 years * 14 sites
+clay  <<- LTERdata$CLAY2/100 
+d1 <<- LTERdata$depth
+tsoi  <<- LTERdata$MAT
+nsites <<- length(LTERdata$Site)
+lig   <<- LTERdata$LIG/100
+Nnew  <<- 1/LTERdata$CN/2.5             #N in litter additions
+fMET1 <<- 0.85 - 0.013 * lig / Nnew    #as partitioned in Daycent
+
+
+siteSpecificParameters = function() {
+    
+    #Parameters related to inputs
+    EST_LIT_in  <<- ANPP_C[s] / (365*24)   #gC/m2/h (from g/m2/y, Knapp et al. Science 2001)
+    BAG_LIT_in  <<- 100      #gC/m2/h
+    soilDepth       <<- d1[s]
+    h2y         <<- 24*365
+    MICROtoECO  <<- soilDepth * 1e4 * 1e6 / 1e6   #mgC/cm3 to kgC/km2
+    EST_LIT     <<- EST_LIT_in  * 1e3 / 1e4    #mgC/cm2/h 
+    BAG_LIT     <<- BAG_LIT_in  * 1e3 / 1e4    #mgC/cm2/h
+    fMET        <<- fMET1[s]
+    Inputs        <<- array(NA, dim=2)              #Litter inputs to MET/STR
+    Inputs[1]     <<- (EST_LIT / soilDepth) * fMET      #partitioned to layers
+    Inputs[2]     <<- (EST_LIT / soilDepth) * (1-fMET)
+    FI       <<- c(0.05,0.3)#c(0.05, 0.05)#
+    
+    BAG      <<- array(NA, dim=c(6,2))              #litter BAG inputs to MET/STR
+    for (i in 1:6) {
+        BAG[i,1]   <<- (BAG_LIT / soilDepth) * bagMET[i]      #partitioned to layers
+        BAG[i,2]   <<- (BAG_LIT / soilDepth) * (1-bagMET[i])
+    }
+    
+    #Parameters related to stabilization mechanisms
+    fCLAY       <<- clay[s]
+    fPHYS    <<- 0.1 * c(.15 * exp(1.3*fCLAY), 0.1 * exp(0.8*fCLAY)) #Sulman et al. 2018
+    fCHEM    <<- 3*c(0.1 * exp(-3*fMET) * 1, 0.3 * exp(-3*fMET) * 1) 	#Sulman et al. 2018 #fraction to SOMc
+    fAVAI    <<- 1-(fPHYS + fCHEM)
+    desorb   <<- 2e-5      * exp(-4.5*(fCLAY)) #Sulman et al. 2018
+    desorb   <<- 0.05*desorb
+    Nleak   <<- 0.2#.1   #This is the proportion N lost from DIN pool at each hourly time step.
+    
+    #Parameters related to microbial physiology and pool stoichiometry
+    CUE        <<- c(0.55, 0.25, 0.75, 0.35)  #for LITm and LITs entering MICr and MICK, respectively
+    NUE        <<- .85         #Nitrogen stoichiometry of fixed pools
+    CN_m        <<- 15
+    CN_s        <<- (LTERdata$CN[s]-CN_m*fMET)/(1-fMET)
+    CN_s_BAG    <<-  (bagCN-CN_m*bagMET)/(1-bagMET)
+    CN_r        <<-6#5
+    CN_K        <<-10#8
+    
+    turnover      <<- c(5.2e-4*exp(0.3*(fMET)), 2.4e-4*exp(0.1*(fMET)))	#WORKS BETTER FOR N_RESPONSE RATIO
+    turnover_MOD1 <<- sqrt(ANPP_C[s]/100)  #basicaily standardize against NWT
+    turnover_MOD1[turnover_MOD1 < 0.6] <<- 0.6 # correction not used in LIDET resutls 
+    turnover_MOD1[turnover_MOD1 > 1.3] <<- 1.3      #Sulman et al. 2018
+    turnover      <<- turnover * turnover_MOD1
+    turnover <<- turnover/2.2
+    turnover <<- turnover^2*0.55/(.45*Inputs)
+    densDep <<- 2#1 #This exponent controls the density dependence of microbial turnover. Currently anything other than 1 breaks things.
+    
+    fracNImportr  <<-  0 #No N import for r strategists
+    fracNImportK  <<-  0.2 #Only K strategists can import N
+    
+    #Parameters related to temperature-sensitive enzyme kinetics
+    TSOI        <<- tsoi[s]   
+    #Calculate Vmax & (using parameters from German 2012)
+    #from "gamma" simulations "best", uses max Vslope, min Kslope
+    Vslope   <<- array(NA,dim=6)
+    Vslope[1]<<- 0.043 #META LIT to MIC_1
+    Vslope[2]<<- 0.043 #STRU LIT to MIC_1 
+    Vslope[3]<<- 0.063 #AVAI SOM to MIC_1 
+    Vslope[4]<<- 0.043 #META LIT to MIC_2 
+    Vslope[5]<<- 0.063 #STRU LIT to MIC_2 
+    Vslope[6]<<- 0.063 #AVAI SOM to MIC_2 
+    Vint     <<- 5.47
+    aV       <<- 8e-6
+    aV       <<- aV*.06 #Forward
+    Vmax     <<- exp(TSOI * Vslope + Vint) * aV
+    
+    Kslope   <<- array(NA,dim=6)
+    Kslope[1]<<- 0.017 #META LIT to MIC_1
+    Kslope[2]<<- 0.027 #STRU LIT to MIC_1 
+    Kslope[3]<<- 0.017 #AVAI SOM to MIC_1 
+    Kslope[4]<<- 0.017 #META LIT to MIC_2
+    Kslope[5]<<- 0.027 #STRU LIT to MIC_2
+    Kslope[6]<<- 0.017 #AVAI SOM to MIC_2
+    Kint     <<- 3.19
+    aK       <<- 10
+    aK       <<- aK/20 #Forward
+    Km       <<- exp(Kslope * TSOI + Kint) * aK
+    
+    #Enzyme kinetic modifiers:
+    k        <<- 2.0    #2.0			#REDUCED FROM 3 TO 1, REDUCES TEXTURE EFFECTS ON SOMa decay
+    a        <<- 2.0    #2.2			#increased from 4.0 to 4.5
+    cMAX     <<- 1.4                    #ORIG 1.4 Maximum CHEM SOM scalar w/   0% Clay 
+    cMIN     <<- 1.2                    #ORIG 1.4 Minimum CHEM SOM scalar w/ 100% Clay 
+    cSLOPE   <<- cMIN - cMAX            #Slope of linear function of cSCALAR for CHEM SOM  
+    pSCALAR  <<- a * exp(-k*(sqrt(fCLAY)))  #Scalar for texture effects on SOMp
+    
+    #------------!!MODIFIERS AS IN MIMICS2_b!!---------------
+    MOD1     <<- c(10, 2*.75, 10, 3, 3*.75, 2) 
+    MOD2     <<- c( 8, 2 ,4 * pSCALAR, 2, 4, 6 * pSCALAR) 	
+    
+    VMAX     <<- Vmax * MOD1
+    KM       <<- Km / MOD2
+    KO       <<- c(6,6)     #Values from Sulman et al. 2018
+}
+
+
+initializePools = function() {
+    LIT_1  <<- 1
+    LIT_2  <<- 1
+    MIC_1  <<- 1
+    MIC_2  <<- 1
+    SOM_1  <<- 1
+    SOM_2  <<- 1
+    SOM_3  <<- 1
+    
+    LIT_1_N  <<- .1
+    LIT_2_N  <<- .1
+    MIC_1_N  <<- .1
+    MIC_2_N  <<- .1
+    SOM_1_N  <<- .1
+    SOM_2_N  <<- .1
+    SOM_3_N  <<- .1
+    DIN      <<- .1
+    
+    LITmin  <<- array(NA, dim=4)
+    MICtrn  <<- array(NA, dim=6)
+    SOMmin  <<- array(NA, dim=2)
+    DEsorb  <<- array(NA, dim=1)
+    OXIDAT  <<- array(NA, dim=1)
+    LITminN   <<- array(NA, dim=4)
+    MICtrnN   <<- array(NA, dim=6)
+    SOMminN   <<- array(NA, dim=2)
+    DEsorbN   <<- array(NA, dim=1)
+    OXIDATN   <<- array(NA, dim=1)
+    DINup     <<- array(NA, dim=2)
+    Overflow  <<- array(NA, dim=2)
+    Nspill    <<- array(NA, dim=2)
+    CNup      <<- array(NA, dim=2)
+    upMIC_1   <<-  array(NA, dim=1)
+    upMIC_1_N <<-  array(NA, dim=1)
+    upMIC_2   <<-  array(NA, dim=1)
+    upMIC_2_N <<-  array(NA, dim=1)
+}
+
+findSteadyState = function() {
+    Tpars <<- c( Inputs = Inputs, VMAX = VMAX, KM = KM, CUE = CUE, 
+                 fPHYS = fPHYS, fCHEM = fCHEM, fAVAI = fAVAI, FI = FI, 
+                 turnover = turnover, LITmin = LITmin, SOMmin = SOMmin, MICtrn = MICtrn, 
+                 desorb = desorb, DEsorb = DEsorb, OXIDAT = OXIDAT,
+                 LITminN = LITminN, SOMminN = SOMminN, MICtrnN = MICtrnN,
+                 DEsorbN = DEsorbN, OXIDATN = OXIDATN,
+                 KO = KO,
+                 CNup=CNup, DINup=DINup,Nspill=Nspill, Overflow=Overflow, 
+                 upMIC_1=upMIC_1, upMIC_1_N=upMIC_1_N,
+                 upMIC_2=upMIC_2, upMIC_2_N=upMIC_2_N,
+                 NUE=NUE, CN_m=CN_m, CN_s=CN_s, CN_r=CN_r, CN_K=CN_K,Nleak=Nleak,densDep=densDep)
+    Ty    <<- c(LIT_1 = LIT_1, LIT_2 = LIT_2, 
+                MIC_1 = MIC_1, MIC_2 = MIC_2, 
+                SOM_1 = SOM_1, SOM_2 = SOM_2, SOM_3 = SOM_3,
+                LIT_1_N = LIT_1_N, LIT_2_N = LIT_2_N, 
+                MIC_1_N = MIC_1_N, MIC_2_N = MIC_2_N, 
+                SOM_1_N = SOM_1_N, SOM_2_N = SOM_2_N, SOM_3_N = SOM_3_N,
+                DIN = DIN)
+    test  <<- stode(y = Ty, time = 1E8, fun = FXEQ, parms = Tpars, positive = TRUE)
+    test[[1]]
+}
+
+
+
+ode_steadyState <- function(){
+    Tpars <<- c( Inputs = Inputs, VMAX = VMAX, KM = KM, CUE = CUE, 
+                 fPHYS = fPHYS, fCHEM = fCHEM, fAVAI = fAVAI, FI = FI, 
+                 turnover = turnover, LITmin = LITmin, SOMmin = SOMmin, MICtrn = MICtrn, 
+                 desorb = desorb, DEsorb = DEsorb, OXIDAT = OXIDAT,
+                 LITminN = LITminN, SOMminN = SOMminN, MICtrnN = MICtrnN,
+                 DEsorbN = DEsorbN, OXIDATN = OXIDATN,
+                 KO = KO,
+                 CNup=CNup, DINup=DINup,Nspill=Nspill, Overflow=Overflow, 
+                 upMIC_1=upMIC_1, upMIC_1_N=upMIC_1_N,
+                 upMIC_2=upMIC_2, upMIC_2_N=upMIC_2_N,
+                 NUE=NUE, CN_m=CN_m, CN_s=CN_s, CN_r=CN_r, CN_K=CN_K,Nleak=Nleak,densDep=densDep)
+    Ty    <<- c(LIT_1 = LIT_1, LIT_2 = LIT_2, 
+                MIC_1 = MIC_1, MIC_2 = MIC_2, 
+                SOM_1 = SOM_1, SOM_2 = SOM_2, SOM_3 = SOM_3,
+                LIT_1_N = LIT_1_N, LIT_2_N = LIT_2_N, 
+                MIC_1_N = MIC_1_N, MIC_2_N = MIC_2_N, 
+                SOM_1_N = SOM_1_N, SOM_2_N = SOM_2_N, SOM_3_N = SOM_3_N,
+                DIN = DIN)
+    
+    t_1 <- 1:90000
+    
+    ode_solve <- ode(y = Ty, times = t_1, func = FXEQ, parms = Tpars)
+    
+    return(ode_solve)
+}
+
+
+outputSteadyState <- function(){
+    LIT_1    <<- test[[1]][[1]]
+    LIT_2    <<- test[[1]][[2]]
+    MIC_1    <<- test[[1]][[3]]
+    MIC_2    <<- test[[1]][[4]]
+    SOM_1    <<- test[[1]][[5]]
+    SOM_2    <<- test[[1]][[6]]
+    SOM_3    <<- test[[1]][[7]]
+    
+    LIT_1_N    <<- test[[1]][[8]]
+    LIT_2_N    <<- test[[1]][[9]]
+    MIC_1_N    <<- test[[1]][[10]]
+    MIC_2_N    <<- test[[1]][[11]]
+    SOM_1_N    <<- test[[1]][[12]]
+    SOM_2_N    <<- test[[1]][[13]]
+    SOM_3_N    <<- test[[1]][[14]]
+    DIN        <<- test[[1]][[15]]
+    Site <<- strSite[s]
+    
+    #Carbon fluxes
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #Flows to and from MIC_1
+    LITmin[1] = MIC_1 * VMAX[1] * LIT_1 / (KM[1] + LIT_1)   #MIC_1 decomp of MET lit
+    LITmin[2] = MIC_1 * VMAX[2] * LIT_2 / (KM[2] + LIT_2)   #MIC_1 decomp of STRUC lit
+    SOMmin[1] = MIC_1 * VMAX[3] * SOM_3 / (KM[3] + SOM_3)   #decomp of SOMa by MIC_1
+    LITmin[3] = MIC_2 * VMAX[4] * LIT_1 / (KM[4] + LIT_1)   #decomp of MET litter
+    LITmin[4] = MIC_2 * VMAX[5] * LIT_2 / (KM[5] + LIT_2)   #decomp of SRUCTURAL litter
+    SOMmin[2] = MIC_2 * VMAX[6] * SOM_3 / (KM[6] + SOM_3)   #decomp of SOMa by MIC_2
+    
+    #Nitrogen fluxes
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #Flows to and from MIC_1
+    LITminN[1] =  LITmin[1]*LIT_1_N/(LIT_1+1e-100)#LITmin[1]/CN_m
+    LITminN[2] =  LITmin[2]*LIT_2_N/(LIT_2++1e-100)#LITmin[2]/CN_s
+    SOMminN[1] =  SOMmin[1]*(SOM_3_N/(SOM_3++1e-100))#SOMmin[1]*(SOM_3_N/SOM_3)#*relRateN
+    LITminN[3] =  LITmin[3]*LIT_1_N/(LIT_1+1e-100)#LITmin[3]/CN_m
+    LITminN[4] =  LITmin[4]*LIT_2_N/(LIT_2+1e-100)#LITmin[4]/CN_s
+    SOMminN[2] =  SOMmin[2]*(SOM_3_N/(SOM_3+1e-100))#SOMmin[2]*(SOM_3_N/SOM_3)#*relRateN
+    DINup[1]   = (1-Nleak)*DIN*MIC_1/(MIC_1+MIC_2+1e-100) #Partitions available DIN between microbial pools based on relative biomass
+    DINup[2]   = (1-Nleak)*DIN*MIC_2/(MIC_1+MIC_2+1e-100)
+    
+    #####
+    upMIC_1    = CUE[1]*(LITmin[1] + SOMmin[1]) + CUE[2]*(LITmin[2])
+    upMIC_1_N  = NUE*(LITminN[1] + SOMminN[1]) + NUE*(LITminN[2]) + DINup[1]
+    CNup[1]    = (upMIC_1)/(upMIC_1_N+1e-100) #Trying to optimize run speed here by avoiding /0
+    Overflow[1] = (upMIC_1) - (upMIC_1_N)*min(CN_r, CNup[1])
+    Nspill[1]   = (upMIC_1_N) - (upMIC_1)/max(CN_r, CNup[1])
+    
+    upMIC_2    = CUE[3]*(LITmin[3] + SOMmin[2]) + CUE[4]*(LITmin[4])
+    upMIC_2_N  = NUE*(LITminN[3] + SOMminN[2]) + NUE*(LITminN[4]) + DINup[2]
+    CNup[2]    = (upMIC_2)/(upMIC_2_N+1e-100)
+    Overflow[2] = (upMIC_2) - (upMIC_2_N)*min(CN_K, CNup[2])
+    Nspill[2]   = (upMIC_2_N) - (upMIC_2)/max(CN_K, CNup[2])
+    ######
+    
+    dLIT_1 = Inputs[1]*(1-FI[1]) - LITmin[1] - LITmin[3]
+    dLIT_2 = Inputs[2]*(1-FI[2]) - LITmin[2] - LITmin[4]
+    dMIC_1 = CUE[1]*(LITmin[1] + SOMmin[1]) + CUE[2]*(LITmin[2]) - sum(MICtrn[1:3]) - Overflow[1]
+    dMIC_2 = CUE[3]*(LITmin[3] + SOMmin[2]) + CUE[4]*(LITmin[4]) - sum(MICtrn[4:6]) - Overflow[2] 
+    dSOM_1 = Inputs[1]*FI[1] + MICtrn[1] + MICtrn[4] - DEsorb 
+    dSOM_2 = Inputs[2]*FI[2] + MICtrn[2] + MICtrn[5] - OXIDAT
+    dSOM_3 = MICtrn[3] + MICtrn[6] + DEsorb + OXIDAT - SOMmin[1] - SOMmin[2]
+    
+    dLIT_1_N = Inputs[1]*(1-FI[1])/CN_m - LITminN[1] - LITminN[3]
+    dLIT_2_N = Inputs[2]*(1-FI[2])/CN_s - LITminN[2] - LITminN[4]
+    dMIC_1_N = NUE*(LITminN[1] + SOMminN[1]) + NUE*(LITminN[2]) - sum(MICtrnN[1:3]) + DINup[1] - Nspill[1]
+    dMIC_2_N = NUE*(LITminN[3] + SOMminN[2]) + NUE*(LITminN[4]) - sum(MICtrnN[4:6]) + DINup[2] - Nspill[2]
+    dSOM_1_N = Inputs[1]*FI[1]/CN_m + MICtrnN[1] + MICtrnN[4] - DEsorbN
+    dSOM_2_N = Inputs[2]*FI[2]/CN_s + MICtrnN[2] + MICtrnN[5] - OXIDATN
+    dSOM_3_N = MICtrnN[3] + MICtrnN[6] + DEsorbN + OXIDATN - SOMminN[1] - SOMminN[2]
+    
+    dDIN = (1-NUE)*(LITminN[1] + LITminN[2] + SOMminN[1]) +  #Inputs from r decomp
+        (1-NUE)*(LITminN[3] + LITminN[4] + SOMminN[2]) +  #Inputs from K decomp
+        Nspill[1] + Nspill[2] - DINup[1] - DINup[2]    #Uptake to microbial pools and spillage
+    LeachingLoss = Nleak*DIN
+    dDIN = dDIN-LeachingLoss #N leaching losses    
+    
+    Resp=(1-CUE[1])*(LITmin[1]+ SOMmin[1]) + (1-CUE[2])*(LITmin[2]) +
+        (1-CUE[3])*(LITmin[3]+ SOMmin[2]) + (1-CUE[4])*(LITmin[4]) + Overflow[1] + Overflow[2]
+    NminTot=(1-NUE)*(LITminN[1] + LITminN[2] + SOMminN[1]) +  #Inputs from r decomp
+        (1-NUE)*(LITminN[3] + LITminN[4] + SOMminN[2]) +  #Inputs from K decomp
+        Nspill[1] + Nspill[2]
+    NminNet=NminTot-DINup[1]-DINup[2]
+    
+    newrow <<- cbind.data.frame(Site, MIC_1,MIC_2,LIT_1,LIT_2,SOM_1,SOM_2,SOM_3,
+                                MIC_1_N,MIC_2_N,LIT_1_N,LIT_2_N,SOM_1_N,SOM_2_N,SOM_3_N,DIN, 
+                                NminTot,NminNet,Resp,
+                                stringsAsFactors = FALSE)
+    SSoutput[s,] <<- newrow
+}
+```
+
+
+```{r}
+x1 <- range(1,length(LTERdata$Site))
+t1 <- as.list(x1[1]:x1[2])
+ode_vector <- vector('list', length = length(t1))
+valiSites <- t1
+
+for(s in valiSites){
+    #Find steady state solution, plot to examine and output values to table
+    siteSpecificParameters()
+    initializePools()
+    #findSteadyState()
+    #outputSteadyState()
+    new_out_ODE <- ode_steadyState()
+    assign(paste0('maxODE', s), new_out_ODE)
+    #ode_vector[i] <- new_out_ODE
+    
+} #finish site loop
+
+```
+
+```{r}
+
+FXEQ <- function(t, y, pars) {
+    with (as.list(c(y, pars)),{
+        
+        #Carbon fluxes
+        #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        #Flows to and from MIC_1
+        LITmin[1] = MIC_1 * VMAX[1] * LIT_1 / (KM[1] + LIT_1)#LIT_1)   #MIC_1 decomp of MET lit
+        LITmin[2] = MIC_1 * VMAX[2] * LIT_2 / (KM[2] + LIT_2)#LIT_2)   #MIC_1 decomp of STRUC lit
+        SOMmin[1] = MIC_1 * VMAX[3] * SOM_3 / (KM[3] + SOM_3)#SOM_3)   #decomp of SOMa by MIC_1
+        MICtrn[1] = MIC_1^densDep * turnover[1]  * fPHYS[1] #MIC_1 turnover to PHYSICAL SOM
+        MICtrn[2] = MIC_1^densDep * turnover[1]  * fCHEM[1] #MIC_1 turnover to CHEMICAL SOM
+        MICtrn[3] = MIC_1^densDep * turnover[1]  * fAVAI[1] #MIC_1 turnover to AVAILABLE SOM
+        
+        #Flows to and from MIC_2
+        LITmin[3] = MIC_2 * VMAX[4] * LIT_1 / (KM[4] + LIT_1)#LIT_1)   #decomp of MET litter
+        LITmin[4] = MIC_2 * VMAX[5] * LIT_2 / (KM[5] + LIT_2)#LIT_2)   #decomp of SRUCTURAL litter
+        SOMmin[2] = MIC_2 * VMAX[6] * SOM_3 / (KM[6] + SOM_3)#SOM_3)   #decomp of SOMa by MIC_2
+        MICtrn[4] = MIC_2^densDep * turnover[2]  * fPHYS[2]                  #MIC_2 turnover to PHYSICAL  SOM
+        MICtrn[5] = MIC_2^densDep * turnover[2]  * fCHEM[2]                  #MIC_2 turnover to CHEMICAL  SOM
+        MICtrn[6] = MIC_2^densDep * turnover[2]  * fAVAI[2]                  #MIC_2 turnover to AVAILABLE SOM
+        
+        DEsorb    = SOM_1 * desorb  #* (MIC_1 + MIC_2)		#desorbtion of PHYS to AVAIL (function of fCLAY)
+        OXIDAT    = ((MIC_2 * VMAX[5] * SOM_2 / (KO[2]*KM[5] + SOM_2)) +#SOM_2)) +
+                         (MIC_1 * VMAX[2] * SOM_2 / (KO[1]*KM[2] + SOM_2)))#SOM_2)))  #oxidation of C to A
+        
+        #Nitrogen fluxes
+        #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        #Flows to and from MIC_1
+        LITminN[1] =  LITmin[1]*LIT_1_N/(LIT_1+1e-100)#LITmin[1]/CN_m
+        LITminN[2] =  LITmin[2]*LIT_2_N/(LIT_2++1e-100)#LITmin[2]/CN_s
+        SOMminN[1] =  SOMmin[1]*(SOM_3_N/(SOM_3++1e-100))#SOMmin[1]*(SOM_3_N/SOM_3)#*relRateN
+        MICtrnN[1] =  MICtrn[1]*MIC_1_N/(MIC_1+1e-100)#MICtrn[1]/CN_r
+        MICtrnN[2] =  MICtrn[2]*MIC_1_N/(MIC_1+1e-100)#MICtrn[2]/CN_r
+        MICtrnN[3] =  MICtrn[3]*MIC_1_N/(MIC_1+1e-100)#MICtrn[3]/CN_r
+        
+        #Flows to and from MIC_2
+        LITminN[3] =  LITmin[3]*LIT_1_N/(LIT_1+1e-100)#LITmin[3]/CN_m
+        LITminN[4] =  LITmin[4]*LIT_2_N/(LIT_2+1e-100)#LITmin[4]/CN_s
+        SOMminN[2] =  SOMmin[2]*(SOM_3_N/(SOM_3+1e-100))#SOMmin[2]*(SOM_3_N/SOM_3)#*relRateN
+        MICtrnN[4] =  MICtrn[4]*MIC_2_N/(MIC_2+1e-100)#MICtrn[4]/CN_K
+        MICtrnN[5] =  MICtrn[5]*MIC_2_N/(MIC_2+1e-100)#MICtrn[5]/CN_K
+        MICtrnN[6] =  MICtrn[6]*MIC_2_N/(MIC_2+1e-100)#MICtrn[6]/CN_K
+        
+        DEsorbN    =  DEsorb[1]*(SOM_1_N/(SOM_1+1e-100))#*relRateN
+        OXIDATN    =  OXIDAT[1]*(SOM_2_N/(SOM_2+1e-100))#*relRateN
+        DINup[1]   = (1-Nleak)*DIN*MIC_1/(MIC_1+MIC_2+1e-100) #Partitions DIN between microbial pools based on relative biomass
+        DINup[2]   = (1-Nleak)*DIN*MIC_2/(MIC_1+MIC_2+1e-100)
+        
+        #####
+        upMIC_1    = CUE[1]*(LITmin[1] + SOMmin[1]) + CUE[2]*(LITmin[2])
+        upMIC_1_N  = NUE*(LITminN[1] + SOMminN[1]) + NUE*(LITminN[2]) + DINup[1]
+        CNup[1]    = (upMIC_1)/(upMIC_1_N+1e-100) #Trying to optimize run speed here by avoiding /0
+        Overflow[1] = (upMIC_1) - (upMIC_1_N)*min(CN_r, CNup[1])
+        Nspill[1]   = (upMIC_1_N) - (upMIC_1)/max(CN_r, CNup[1])
+        
+        upMIC_2    = CUE[3]*(LITmin[3] + SOMmin[2]) + CUE[4]*(LITmin[4])
+        upMIC_2_N  = NUE*(LITminN[3] + SOMminN[2]) + NUE*(LITminN[4]) + DINup[2]
+        CNup[2]    = (upMIC_2)/(upMIC_2_N+1e-100)
+        Overflow[2] = (upMIC_2) - (upMIC_2_N)*min(CN_K, CNup[2])
+        Nspill[2]   = (upMIC_2_N) - (upMIC_2)/max(CN_K, CNup[2])
+        ######
+        
+        dLIT_1 = Inputs[1]*(1-FI[1]) - LITmin[1] - LITmin[3]
+        dLIT_2 = Inputs[2]*(1-FI[2]) - LITmin[2] - LITmin[4]
+        dMIC_1 = CUE[1]*(LITmin[1] + SOMmin[1]) + CUE[2]*(LITmin[2]) - sum(MICtrn[1:3]) - Overflow[1]
+        dMIC_2 = CUE[3]*(LITmin[3] + SOMmin[2]) + CUE[4]*(LITmin[4]) - sum(MICtrn[4:6]) - Overflow[2] 
+        dSOM_1 = Inputs[1]*FI[1] + MICtrn[1] + MICtrn[4] - DEsorb 
+        dSOM_2 = Inputs[2]*FI[2] + MICtrn[2] + MICtrn[5] - OXIDAT
+        dSOM_3 = MICtrn[3] + MICtrn[6] + DEsorb + OXIDAT - SOMmin[1] - SOMmin[2]
+        
+        dLIT_1_N = Inputs[1]*(1-FI[1])/CN_m - LITminN[1] - LITminN[3]
+        dLIT_2_N = Inputs[2]*(1-FI[2])/CN_s - LITminN[2] - LITminN[4]
+        dMIC_1_N = NUE*(LITminN[1] + SOMminN[1]) + NUE*(LITminN[2]) - sum(MICtrnN[1:3]) + DINup[1] - Nspill[1]
+        dMIC_2_N = NUE*(LITminN[3] + SOMminN[2]) + NUE*(LITminN[4]) - sum(MICtrnN[4:6]) + DINup[2] - Nspill[2]
+        dSOM_1_N = Inputs[1]*FI[1]/CN_m + MICtrnN[1] + MICtrnN[4] - DEsorbN
+        dSOM_2_N = Inputs[2]*FI[2]/CN_s + MICtrnN[2] + MICtrnN[5] - OXIDATN
+        dSOM_3_N = MICtrnN[3] + MICtrnN[6] + DEsorbN + OXIDATN - SOMminN[1] - SOMminN[2]
+        
+        dDIN = (1-NUE)*(LITminN[1] + LITminN[2] + SOMminN[1]) +  #Inputs from r decomp
+            (1-NUE)*(LITminN[3] + LITminN[4] + SOMminN[2]) +  #Inputs from K decomp
+            Nspill[1] + Nspill[2] - DINup[1] - DINup[2]    #Uptake to microbial pools and spillage
+        LeachingLoss = Nleak*DIN
+        dDIN = dDIN-LeachingLoss #N leaching losses    
+        
+        list(c(dLIT_1, dLIT_2, dMIC_1, dMIC_2, dSOM_1, dSOM_2, dSOM_3,dLIT_1_N, dLIT_2_N, dMIC_1_N, dMIC_2_N, dSOM_1_N, dSOM_2_N, dSOM_3_N,dDIN))
+    })
+}
+
+
+TFXEQ <- function(t, y, pars) {
+    with (as.list(c(y, pars)),{
+        
+        #Carbon fluxes
+        #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        #Flows to and from MIC_1
+        LITmin[1] = MIC_1 * VMAX[1] * LIT_1 / (KM[1] + LIT_1)#LIT_1)   #MIC_1 decomp of MET lit
+        LITmin[2] = MIC_1 * VMAX[2] * LIT_2 / (KM[2] + LIT_2)#LIT_2)   #MIC_1 decomp of STRUC lit
+        SOMmin[1] = MIC_1 * VMAX[3] * SOM_3 / (KM[3] + SOM_3)#SOM_3)   #decomp of SOMa by MIC_1
+        MICtrn[1] = MIC_1^densDep * turnover[1]  * fPHYS[1] #MIC_1 turnover to PHYSICAL SOM
+        MICtrn[2] = MIC_1^densDep * turnover[1]  * fCHEM[1] #MIC_1 turnover to CHEMICAL SOM
+        MICtrn[3] = MIC_1^densDep * turnover[1]  * fAVAI[1] #MIC_1 turnover to AVAILABLE SOM
+        
+        #Flows to and from MIC_2
+        LITmin[3] = MIC_2 * VMAX[4] * LIT_1 / (KM[4] + LIT_1)#LIT_1)   #decomp of MET litter
+        LITmin[4] = MIC_2 * VMAX[5] * LIT_2 / (KM[5] + LIT_2)#LIT_2)   #decomp of SRUCTURAL litter
+        SOMmin[2] = MIC_2 * VMAX[6] * SOM_3 / (KM[6] + SOM_3)#SOM_3)   #decomp of SOMa by MIC_2
+        MICtrn[4] = MIC_2^densDep * turnover[2]  * fPHYS[2]                  #MIC_2 turnover to PHYSICAL  SOM
+        MICtrn[5] = MIC_2^densDep * turnover[2]  * fCHEM[2]                  #MIC_2 turnover to CHEMICAL  SOM
+        MICtrn[6] = MIC_2^densDep * turnover[2]  * fAVAI[2]                  #MIC_2 turnover to AVAILABLE SOM
+        
+        DEsorb    = SOM_1 * desorb  #* (MIC_1 + MIC_2)		#desorbtion of PHYS to AVAIL (function of fCLAY)
+        OXIDAT    = ((MIC_2 * VMAX[5] * SOM_2 / (KO[2]*KM[5] + SOM_2)) +#SOM_2)) +
+                         (MIC_1 * VMAX[2] * SOM_2 / (KO[1]*KM[2] + SOM_2)))#SOM_2)))  #oxidation of C to A
+        
+        #Nitrogen fluxes
+        #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        #Flows to and from MIC_1
+        LITminN[1] =  LITmin[1]*LIT_1_N/(LIT_1+1e-100)#LITmin[1]/CN_m
+        LITminN[2] =  LITmin[2]*LIT_2_N/(LIT_2++1e-100)#LITmin[2]/CN_s
+        SOMminN[1] =  SOMmin[1]*(SOM_3_N/(SOM_3++1e-100))#SOMmin[1]*(SOM_3_N/SOM_3)#*relRateN
+        MICtrnN[1] =  MICtrn[1]*MIC_1_N/(MIC_1+1e-100)#MICtrn[1]/CN_r
+        MICtrnN[2] =  MICtrn[2]*MIC_1_N/(MIC_1+1e-100)#MICtrn[2]/CN_r
+        MICtrnN[3] =  MICtrn[3]*MIC_1_N/(MIC_1+1e-100)#MICtrn[3]/CN_r
+        
+        #Flows to and from MIC_2
+        LITminN[3] =  LITmin[3]*LIT_1_N/(LIT_1+1e-100)#LITmin[3]/CN_m
+        LITminN[4] =  LITmin[4]*LIT_2_N/(LIT_2+1e-100)#LITmin[4]/CN_s
+        SOMminN[2] =  SOMmin[2]*(SOM_3_N/(SOM_3+1e-100))#SOMmin[2]*(SOM_3_N/SOM_3)#*relRateN
+        MICtrnN[4] =  MICtrn[4]*MIC_2_N/(MIC_2+1e-100)#MICtrn[4]/CN_K
+        MICtrnN[5] =  MICtrn[5]*MIC_2_N/(MIC_2+1e-100)#MICtrn[5]/CN_K
+        MICtrnN[6] =  MICtrn[6]*MIC_2_N/(MIC_2+1e-100)#MICtrn[6]/CN_K
+        
+        DEsorbN    =  DEsorb[1]*(SOM_1_N/(SOM_1+1e-100))#*relRateN
+        OXIDATN    =  OXIDAT[1]*(SOM_2_N/(SOM_2+1e-100))#*relRateN
+        DINup[1]   = (1-Nleak)*DIN*MIC_1/(MIC_1+MIC_2+1e-100) #Partitions available DIN between microbial pools based on relative biomass
+        DINup[2]   = (1-Nleak)*DIN*MIC_2/(MIC_1+MIC_2+1e-100)
+        
+        #####
+        upMIC_1    = CUE[1]*(LITmin[1] + SOMmin[1]) + CUE[2]*(LITmin[2])
+        upMIC_1_N  = NUE*(LITminN[1] + SOMminN[1]) + NUE*(LITminN[2]) + DINup[1]
+        CNup[1]    = (upMIC_1)/(upMIC_1_N+1e-100) #Trying to optimize run speed here by avoiding /0
+        Overflow[1] = (upMIC_1) - (upMIC_1_N)*min(CN_r, CNup[1])
+        Nspill[1]   = (upMIC_1_N) - (upMIC_1)/max(CN_r, CNup[1])
+        
+        upMIC_2    = CUE[3]*(LITmin[3] + SOMmin[2]) + CUE[4]*(LITmin[4])
+        upMIC_2_N  = NUE*(LITminN[3] + SOMminN[2]) + NUE*(LITminN[4]) + DINup[2]
+        CNup[2]    = (upMIC_2)/(upMIC_2_N+1e-100)
+        Overflow[2] = (upMIC_2) - (upMIC_2_N)*min(CN_K, CNup[2])
+        Nspill[2]   = (upMIC_2_N) - (upMIC_2)/max(CN_K, CNup[2])
+        ######
+        
+        dLIT_1 = Inputs[1]*(1-FI[1]) - LITmin[1] - LITmin[3]
+        dLIT_2 = Inputs[2]*(1-FI[2]) - LITmin[2] - LITmin[4]
+        dMIC_1 = CUE[1]*(LITmin[1] + SOMmin[1]) + CUE[2]*(LITmin[2]) - sum(MICtrn[1:3]) - Overflow[1]
+        dMIC_2 = CUE[3]*(LITmin[3] + SOMmin[2]) + CUE[4]*(LITmin[4]) - sum(MICtrn[4:6]) - Overflow[2] 
+        dSOM_1 = Inputs[1]*FI[1] + MICtrn[1] + MICtrn[4] - DEsorb 
+        dSOM_2 = Inputs[2]*FI[2] + MICtrn[2] + MICtrn[5] - OXIDAT
+        dSOM_3 = MICtrn[3] + MICtrn[6] + DEsorb + OXIDAT - SOMmin[1] - SOMmin[2]
+        
+        dLIT_1_N = Inputs[1]*(1-FI[1])/CN_m - LITminN[1] - LITminN[3]
+        dLIT_2_N = Inputs[2]*(1-FI[2])/CN_s - LITminN[2] - LITminN[4]
+        dMIC_1_N = NUE*(LITminN[1] + SOMminN[1]) + NUE*(LITminN[2]) - sum(MICtrnN[1:3]) + DINup[1] - Nspill[1]
+        dMIC_2_N = NUE*(LITminN[3] + SOMminN[2]) + NUE*(LITminN[4]) - sum(MICtrnN[4:6]) + DINup[2] - Nspill[2]
+        dSOM_1_N = Inputs[1]*FI[1]/CN_m + MICtrnN[1] + MICtrnN[4] - DEsorbN
+        dSOM_2_N = Inputs[2]*FI[2]/CN_s + MICtrnN[2] + MICtrnN[5] - OXIDATN
+        dSOM_3_N = MICtrnN[3] + MICtrnN[6] + DEsorbN + OXIDATN - SOMminN[1] - SOMminN[2]
+        
+        dDIN = (1-NUE)*(LITminN[1] + LITminN[2] + SOMminN[1]) +  #Inputs from r decomp
+            (1-NUE)*(LITminN[3] + LITminN[4] + SOMminN[2]) +  #Inputs from K decomp
+            Nspill[1] + Nspill[2] - DINup[1] - DINup[2]    #Uptake to microbial pools and spillage
+        LeachingLoss = Nleak*DIN
+        dDIN = dDIN-LeachingLoss #N leaching losses  
+        
+        #Tracer tier calculations
+        # III. Carbon, tracer
+        TLITmin[1] = TLIT_1/LIT_1*LITmin[1]   #MIC_1 decomp of MET lit
+        TLITmin[2] = TLIT_2/LIT_2*LITmin[2]   #MIC_1 decomp of STRUC lit
+        TSOMmin[1] = TSOM_3/SOM_3*SOMmin[1]   #Decomp of SOMa by MIC_1
+        TMICtrn[1] = TMIC_1/MIC_1*MICtrn[1]   #MIC_1 turnover to SOMp
+        TMICtrn[2] = TMIC_1/MIC_1*MICtrn[2]   #MIC_1 turnover to SOMc
+        TMICtrn[3] = TMIC_1/MIC_1*MICtrn[3]   #MIC_1 turnover to SOMa
+        
+        #Flows to and from MIC_2
+        TLITmin[3] = TLIT_1/LIT_1*LITmin[3]   #decomp of MET litter
+        TLITmin[4] = TLIT_2/LIT_2*LITmin[4]   #decomp of SRUCTURAL litter
+        TSOMmin[2] = TSOM_3/SOM_3*SOMmin[2]   #decomp of PHYSICAL SOM by MIC_1
+        TMICtrn[4] = TMIC_2/MIC_2*MICtrn[4]   #MIC_2 turnover to SOMp
+        TMICtrn[5] = TMIC_2/MIC_2*MICtrn[5]   #MIC_2 turnover to SOMc
+        TMICtrn[6] = TMIC_2/MIC_2*MICtrn[6]   #MIC_2 turnover to SOMa
+        
+        TDEsorb[1]    = TSOM_1/SOM_1*DEsorb[1]#SOM_1[2] * desorb  #* (MIC_1 + MIC_2)  #desorbtion of PHYS to AVAIL (function of fCLAY)
+        TOXIDAT[1]    = TSOM_2/SOM_2*OXIDAT[1]
+        
+        #Flows to and from MIC_1
+        TLITminN[1] =  TLITmin[1]*TLIT_1_N/(TLIT_1+1e-100)
+        TLITminN[2] =  TLITmin[2]*TLIT_2_N/(TLIT_2+1e-100)
+        TMICtrnN[1] =  TMICtrn[1]*TMIC_1_N/(TMIC_1+1e-100)
+        TMICtrnN[2] =  TMICtrn[2]*TMIC_1_N/(TMIC_1+1e-100)
+        TMICtrnN[3] =  TMICtrn[3]*TMIC_1_N/(TMIC_1+1e-100)
+        TSOMminN[1] =  TSOMmin[1]*TSOM_3_N/(TSOM_3+1e-100)  
+        
+        #Flows to and from MIC_2
+        TLITminN[3] =  TLITmin[3]*TLIT_1_N/(TLIT_1+1e-100)
+        TLITminN[4] =  TLITmin[4]*TLIT_2_N/(TLIT_2+1e-100)
+        TMICtrnN[4] =  TMICtrn[4]*TMIC_2_N/(TMIC_2+1e-100)
+        TMICtrnN[5] =  TMICtrn[5]*TMIC_2_N/(TMIC_2+1e-100)
+        TMICtrnN[6] =  TMICtrn[6]*TMIC_2_N/(TMIC_2+1e-100)
+        TSOMminN[2] =  TSOMmin[2]*TSOM_3_N/(TSOM_3+1e-100)
+        
+        TDEsorbN =  TDEsorb*TSOM_1_N/(TSOM_1+1e-100)
+        TOXIDATN =  TOXIDAT*TSOM_2_N/(TSOM_2+1e-100)
+        TDINup[1] = TDIN/(DIN+1e-100)*DINup[1]
+        TDINup[2] = TDIN/(DIN+1e-100)*DINup[2]
+        
+        #####
+        TNimport[1] = fracNImportr*LeachingLoss
+        TNimport[2] = fracNImportK*LeachingLoss
+        
+        upTMIC_1    = CUE[1]*(TLITmin[1] + TSOMmin[1]) + CUE[2]*TLITmin[2]
+        upTMIC_1_N  = NUE*(TLITminN[1] + TSOMminN[1]) + NUE*TLITminN[2] + TDINup[1] + TNimport[1]
+        TCNup[1]    = upTMIC_1/(upTMIC_1_N+1e-100)
+        TOverflow[1] = upTMIC_1 - upTMIC_1_N*min(CN_r, TCNup[1])
+        TNspill[1]   = upTMIC_1_N - upTMIC_1/max(CN_r, TCNup[1])
+        
+        upTMIC_2    = CUE[3]*(TLITmin[3] + TSOMmin[2]) + CUE[4]*TLITmin[4]
+        upTMIC_2_N  = NUE*(TLITminN[3] + TSOMminN[2]) + NUE*TLITminN[4] + TDINup[2] + TNimport[2]
+        TCNup[2]    = upTMIC_2/(upTMIC_2_N+1e-100)
+        TOverflow[2] = upTMIC_2 - upTMIC_2_N*min(CN_K, TCNup[2])
+        TNspill[2]   = upTMIC_2_N - upTMIC_2/max(CN_K, TCNup[2])
+        ######
+        
+        dTLIT_1 = - TLITmin[1] - TLITmin[3]
+        dTLIT_2 = - TLITmin[2] - TLITmin[4]
+        dTMIC_1 = CUE[1]*(TLITmin[1] + TSOMmin[1]) + CUE[2]*TLITmin[2] - sum(TMICtrn[1:3]) - TOverflow[1]
+        dTMIC_2 = CUE[3]*(TLITmin[3] + TSOMmin[2]) + CUE[4]*TLITmin[4] - sum(TMICtrn[4:6]) - TOverflow[2]
+        dTSOM_1 = TMICtrn[1] + TMICtrn[4] - TDEsorb[1]
+        dTSOM_2 = TMICtrn[2] + TMICtrn[5] - TOXIDAT[1]
+        dTSOM_3 = TMICtrn[3] + TMICtrn[6] + TDEsorb[1] + TOXIDAT[1] - TSOMmin[1] - TSOMmin[2] 
+        
+        dTLIT_1_N = - TLITminN[1] - TLITminN[3]
+        dTLIT_2_N = - TLITminN[2] - TLITminN[4]
+        dTMIC_1_N = NUE*TLITminN[1] + NUE*TLITminN[2] - sum(TMICtrnN[1:3]) + TDINup[1] + NUE*TSOMminN[1] + TNimport[1] - TNspill[1]
+        dTMIC_2_N = NUE*TLITminN[3] + NUE*TLITminN[4] - sum(TMICtrnN[4:6]) + TDINup[2] + NUE*TSOMminN[2] + TNimport[2] - TNspill[2]
+        dTSOM_1_N = TMICtrnN[1] + TMICtrnN[4] - TDEsorbN[1]
+        dTSOM_2_N = TMICtrnN[2] + TMICtrnN[5] - TOXIDATN[1]
+        dTSOM_3_N = TMICtrn[3]/CN_r + TMICtrn[6]/CN_K + TDEsorbN[1] + TOXIDATN[1] - TSOMminN[1] - TSOMminN[2]
+        
+        dTDIN = (1-NUE)*(TLITminN[1] + TLITminN[2] + TSOMminN[1]) +  #Inputs from r decomp
+            (1-NUE)*(TLITminN[3] + TLITminN[4] + TSOMminN[2]) +  #Inputs from K decomp
+            TNspill[1] + TNspill[2] - TDINup[1] - TDINup[2]    #Uptake to microbial pools and spillage
+        dTDIN = dTDIN-(Nleak)*TDIN #N leaching losses
+        
+        list(c(dLIT_1, dLIT_2, dMIC_1, dMIC_2, dSOM_1, dSOM_2, dSOM_3, dLIT_1_N, 
+               dLIT_2_N, dMIC_1_N, dMIC_2_N, dSOM_1_N, dSOM_2_N, dSOM_3_N, dDIN,
+               dTLIT_1, dTLIT_2, dTMIC_1, dTMIC_2, dTSOM_1, dTSOM_2, dTSOM_3, dTLIT_1_N, 
+               dTLIT_2_N, dTMIC_1_N, dTMIC_2_N, dTSOM_1_N, dTSOM_2_N, dTSOM_3_N, dTDIN))
+    })
+}
+
+
+SSoutput <<- data.frame(matrix(NA,nrow=14, ncol=19))
+colnames(SSoutput) = c("Site", "MICr","MICK","LITm","LITs","SOMp","SOMc","SOMa",
+                       "MICrN","MICKN","LITmN","LITsN","SOMpN","SOMcN","SOMaN","InorgN",
+                       "NminTot","NminNet","Resp")
+
+
+LITtype  <<- c('TRAEf', 'PIREf','THPLf','ACSAf','QUPRf','DRGLf')
+bagMET   <<- c(10.6, 36.2, 37.4, 56.8, 37.1, 49.3) #from Gordon's LitterCharacteristics.txt
+bagLIG   <<- c(16.2, 19.2, 26.7, 15.9, 23.5, 10.9) # % from Gordon's LitterCharacteristics.txt
+bagN     <<- c(0.38, 0.59, 0.62, 0.81, 1.03, 1.97) # %N 
+bagCN    <<- c(133.3,92.7, 83.1, 61.8, 50.5, 24.2)
+calcN    <<- (1 / bagCN) / 2.5 * 100
+calcMET  <<- 0.85 - 0.013 * bagLIG/calcN #as calculated in DAYCENT
+bagMET   <<- calcMET
+
+LTERdata = read.csv("LTER_SITE_min.csv") #site level forcing variables
+ANPP_C  <<- LTERdata$ANPP      # convert to gC/m2/y from g/m2/y
+strSite <<- as.character(LTERdata$Site)  #convert site names to string
+nsites  <<- length(strSite)
+npts   <<- 6*10*14 #6 litter * 10 years * 14 sites
+clay  <<- LTERdata$CLAY2/100 
+d1 <<- LTERdata$depth
+tsoi  <<- LTERdata$MAT
+nsites <<- length(LTERdata$Site)
+lig   <<- LTERdata$LIG/100
+Nnew  <<- 1/LTERdata$CN/2.5             #N in litter additions
+fMET1 <<- 0.85 - 0.013 * lig / Nnew    #as partitioned in Daycent
+
+
+siteSpecificParameters = function() {
+    
+    #Parameters related to inputs
+    EST_LIT_in  <<- ANPP_C[s] / (365*24)   #gC/m2/h (from g/m2/y, Knapp et al. Science 2001)
+    BAG_LIT_in  <<- 100      #gC/m2/h
+    soilDepth       <<- d1[s]
+    h2y         <<- 24*365
+    MICROtoECO  <<- soilDepth * 1e4 * 1e6 / 1e6   #mgC/cm3 to kgC/km2
+    EST_LIT     <<- EST_LIT_in  * 1e3 / 1e4    #mgC/cm2/h 
+    BAG_LIT     <<- BAG_LIT_in  * 1e3 / 1e4    #mgC/cm2/h
+    fMET        <<- fMET1[s]
+    Inputs        <<- array(NA, dim=2)              #Litter inputs to MET/STR
+    Inputs[1]     <<- (EST_LIT / soilDepth) * fMET      #partitioned to layers
+    Inputs[2]     <<- (EST_LIT / soilDepth) * (1-fMET)
+    FI       <<- c(0.05,0.3)#c(0.05, 0.05)#
+    
+    BAG      <<- array(NA, dim=c(6,2))              #litter BAG inputs to MET/STR
+    for (i in 1:6) {
+        BAG[i,1]   <<- (BAG_LIT / soilDepth) * bagMET[i]      #partitioned to layers
+        BAG[i,2]   <<- (BAG_LIT / soilDepth) * (1-bagMET[i])
+    }
+    
+    #Parameters related to stabilization mechanisms
+    fCLAY       <<- clay[s]
+    fPHYS    <<- 0.1 * c(.15 * exp(1.3*fCLAY), 0.1 * exp(0.8*fCLAY)) #Sulman et al. 2018
+    fCHEM    <<- 3*c(0.1 * exp(-3*fMET) * 1, 0.3 * exp(-3*fMET) * 1) 	#Sulman et al. 2018 #fraction to SOMc
+    fAVAI    <<- 1-(fPHYS + fCHEM)
+    desorb   <<- 2e-5      * exp(-4.5*(fCLAY)) #Sulman et al. 2018
+    desorb   <<- 0.05*desorb
+    Nleak   <<- 0.2#.1   #This is the proportion N lost from DIN pool at each hourly time step.
+    
+    #Parameters related to microbial physiology and pool stoichiometry
+    CUE        <<- c(0.55, 0.25, 0.75, 0.35)  #for LITm and LITs entering MICr and MICK, respectively
+    NUE        <<- .85         #Nitrogen stoichiometry of fixed pools
+    CN_m        <<- 15
+    CN_s        <<- (LTERdata$CN[s]-CN_m*fMET)/(1-fMET)
+    CN_s_BAG    <<-  (bagCN-CN_m*bagMET)/(1-bagMET)
+    CN_r        <<-6#5
+    CN_K        <<-10#8
+    
+    turnover      <<- c(5.2e-4*exp(0.3*(fMET)), 2.4e-4*exp(0.1*(fMET)))	#WORKS BETTER FOR N_RESPONSE RATIO
+    turnover_MOD1 <<- sqrt(ANPP_C[s]/100)  #basicaily standardize against NWT
+    turnover_MOD1[turnover_MOD1 < 0.6] <<- 0.6 # correction not used in LIDET resutls 
+    turnover_MOD1[turnover_MOD1 > 1.3] <<- 1.3      #Sulman et al. 2018
+    turnover      <<- turnover * turnover_MOD1
+    turnover <<- turnover/2.2
+    turnover <<- turnover^2*0.55/(.45*Inputs)
+    densDep <<- 2#1 #This exponent controls the density dependence of microbial turnover. Currently anything other than 1 breaks things.
+    
+    fracNImportr  <<-  0 #No N import for r strategists
+    fracNImportK  <<-  0.2 #Only K strategists can import N
+    
+    #Parameters related to temperature-sensitive enzyme kinetics
+    TSOI        <<- tsoi[s]   
+    #Calculate Vmax & (using parameters from German 2012)
+    #from "gamma" simulations "best", uses max Vslope, min Kslope
+    Vslope   <<- array(NA,dim=6)
+    Vslope[1]<<- 0.043 #META LIT to MIC_1
+    Vslope[2]<<- 0.043 #STRU LIT to MIC_1 
+    Vslope[3]<<- 0.063 #AVAI SOM to MIC_1 
+    Vslope[4]<<- 0.043 #META LIT to MIC_2 
+    Vslope[5]<<- 0.063 #STRU LIT to MIC_2 
+    Vslope[6]<<- 0.063 #AVAI SOM to MIC_2 
+    Vint     <<- 5.47
+    aV       <<- 8e-6
+    aV       <<- aV*.06 #Forward
+    Vmax     <<- exp(TSOI * Vslope + Vint) * aV
+    
+    Kslope   <<- array(NA,dim=6)
+    Kslope[1]<<- 0.017 #META LIT to MIC_1
+    Kslope[2]<<- 0.027 #STRU LIT to MIC_1 
+    Kslope[3]<<- 0.017 #AVAI SOM to MIC_1 
+    Kslope[4]<<- 0.017 #META LIT to MIC_2
+    Kslope[5]<<- 0.027 #STRU LIT to MIC_2
+    Kslope[6]<<- 0.017 #AVAI SOM to MIC_2
+    Kint     <<- 3.19
+    aK       <<- 10
+    aK       <<- aK/20 #Forward
+    Km       <<- exp(Kslope * TSOI + Kint) * aK
+    
+    #Enzyme kinetic modifiers:
+    k        <<- 2.0    #2.0			#REDUCED FROM 3 TO 1, REDUCES TEXTURE EFFECTS ON SOMa decay
+    a        <<- 2.0    #2.2			#increased from 4.0 to 4.5
+    cMAX     <<- 1.4                    #ORIG 1.4 Maximum CHEM SOM scalar w/   0% Clay 
+    cMIN     <<- 1.2                    #ORIG 1.4 Minimum CHEM SOM scalar w/ 100% Clay 
+    cSLOPE   <<- cMIN - cMAX            #Slope of linear function of cSCALAR for CHEM SOM  
+    pSCALAR  <<- a * exp(-k*(sqrt(fCLAY)))  #Scalar for texture effects on SOMp
+    
+    #------------!!MODIFIERS AS IN MIMICS2_b!!---------------
+    MOD1     <<- c(10, 2*.75, 10, 3, 3*.75, 2) 
+    MOD2     <<- c( 8, 2 ,4 * pSCALAR, 2, 4, 6 * pSCALAR) 	
+    
+    VMAX     <<- Vmax * MOD1
+    KM       <<- Km / MOD2
+    KO       <<- c(6,6)     #Values from Sulman et al. 2018
+}
+
+
+initializePools = function() {
+    LIT_1  <<- 1
+    LIT_2  <<- 1
+    MIC_1  <<- 1
+    MIC_2  <<- 1
+    SOM_1  <<- 1
+    SOM_2  <<- 1
+    SOM_3  <<- 1
+    
+    LIT_1_N  <<- .1
+    LIT_2_N  <<- .1
+    MIC_1_N  <<- .1
+    MIC_2_N  <<- .1
+    SOM_1_N  <<- .1
+    SOM_2_N  <<- .1
+    SOM_3_N  <<- .1
+    DIN      <<- .1
+    
+    LITmin  <<- array(NA, dim=4)
+    MICtrn  <<- array(NA, dim=6)
+    SOMmin  <<- array(NA, dim=2)
+    DEsorb  <<- array(NA, dim=1)
+    OXIDAT  <<- array(NA, dim=1)
+    LITminN   <<- array(NA, dim=4)
+    MICtrnN   <<- array(NA, dim=6)
+    SOMminN   <<- array(NA, dim=2)
+    DEsorbN   <<- array(NA, dim=1)
+    OXIDATN   <<- array(NA, dim=1)
+    DINup     <<- array(NA, dim=2)
+    Overflow  <<- array(NA, dim=2)
+    Nspill    <<- array(NA, dim=2)
+    CNup      <<- array(NA, dim=2)
+    upMIC_1   <<-  array(NA, dim=1)
+    upMIC_1_N <<-  array(NA, dim=1)
+    upMIC_2   <<-  array(NA, dim=1)
+    upMIC_2_N <<-  array(NA, dim=1)
+}
+
+findSteadyState = function() {
+    Tpars <<- c( Inputs = Inputs, VMAX = VMAX, KM = KM, CUE = CUE, 
+                 fPHYS = fPHYS, fCHEM = fCHEM, fAVAI = fAVAI, FI = FI, 
+                 turnover = turnover, LITmin = LITmin, SOMmin = SOMmin, MICtrn = MICtrn, 
+                 desorb = desorb, DEsorb = DEsorb, OXIDAT = OXIDAT,
+                 LITminN = LITminN, SOMminN = SOMminN, MICtrnN = MICtrnN,
+                 DEsorbN = DEsorbN, OXIDATN = OXIDATN,
+                 KO = KO,
+                 CNup=CNup, DINup=DINup,Nspill=Nspill, Overflow=Overflow, 
+                 upMIC_1=upMIC_1, upMIC_1_N=upMIC_1_N,
+                 upMIC_2=upMIC_2, upMIC_2_N=upMIC_2_N,
+                 NUE=NUE, CN_m=CN_m, CN_s=CN_s, CN_r=CN_r, CN_K=CN_K,Nleak=Nleak,densDep=densDep)
+    Ty    <<- c(LIT_1 = LIT_1, LIT_2 = LIT_2, 
+                MIC_1 = MIC_1, MIC_2 = MIC_2, 
+                SOM_1 = SOM_1, SOM_2 = SOM_2, SOM_3 = SOM_3,
+                LIT_1_N = LIT_1_N, LIT_2_N = LIT_2_N, 
+                MIC_1_N = MIC_1_N, MIC_2_N = MIC_2_N, 
+                SOM_1_N = SOM_1_N, SOM_2_N = SOM_2_N, SOM_3_N = SOM_3_N,
+                DIN = DIN)
+    test  <<- stode(y = Ty, time = 1E8, fun = FXEQ, parms = Tpars, positive = TRUE)
+    test[[1]]
+}
+
+
+
+ode_steadyState <- function(){
+    Tpars <<- c( Inputs = Inputs, VMAX = VMAX, KM = KM, CUE = CUE, 
+                 fPHYS = fPHYS, fCHEM = fCHEM, fAVAI = fAVAI, FI = FI, 
+                 turnover = turnover, LITmin = LITmin, SOMmin = SOMmin, MICtrn = MICtrn, 
+                 desorb = desorb, DEsorb = DEsorb, OXIDAT = OXIDAT,
+                 LITminN = LITminN, SOMminN = SOMminN, MICtrnN = MICtrnN,
+                 DEsorbN = DEsorbN, OXIDATN = OXIDATN,
+                 KO = KO,
+                 CNup=CNup, DINup=DINup,Nspill=Nspill, Overflow=Overflow, 
+                 upMIC_1=upMIC_1, upMIC_1_N=upMIC_1_N,
+                 upMIC_2=upMIC_2, upMIC_2_N=upMIC_2_N,
+                 NUE=NUE, CN_m=CN_m, CN_s=CN_s, CN_r=CN_r, CN_K=CN_K,Nleak=Nleak,densDep=densDep)
+    Ty    <<- c(LIT_1 = LIT_1, LIT_2 = LIT_2, 
+                MIC_1 = MIC_1, MIC_2 = MIC_2, 
+                SOM_1 = SOM_1, SOM_2 = SOM_2, SOM_3 = SOM_3,
+                LIT_1_N = LIT_1_N, LIT_2_N = LIT_2_N, 
+                MIC_1_N = MIC_1_N, MIC_2_N = MIC_2_N, 
+                SOM_1_N = SOM_1_N, SOM_2_N = SOM_2_N, SOM_3_N = SOM_3_N,
+                DIN = DIN)
+    
+    t_1 <- 1:90000
+    
+    ode_solve <- ode(y = Ty, times = t_1, func = FXEQ, parms = Tpars)
+    
+    return(ode_solve)
+}
+
+
+outputSteadyState <- function(){
+    LIT_1    <<- test[[1]][[1]]
+    LIT_2    <<- test[[1]][[2]]
+    MIC_1    <<- test[[1]][[3]]
+    MIC_2    <<- test[[1]][[4]]
+    SOM_1    <<- test[[1]][[5]]
+    SOM_2    <<- test[[1]][[6]]
+    SOM_3    <<- test[[1]][[7]]
+    
+    LIT_1_N    <<- test[[1]][[8]]
+    LIT_2_N    <<- test[[1]][[9]]
+    MIC_1_N    <<- test[[1]][[10]]
+    MIC_2_N    <<- test[[1]][[11]]
+    SOM_1_N    <<- test[[1]][[12]]
+    SOM_2_N    <<- test[[1]][[13]]
+    SOM_3_N    <<- test[[1]][[14]]
+    DIN        <<- test[[1]][[15]]
+    Site <<- strSite[s]
+    
+    #Carbon fluxes
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #Flows to and from MIC_1
+    LITmin[1] = MIC_1 * VMAX[1] * LIT_1 / (KM[1] + LIT_1)   #MIC_1 decomp of MET lit
+    LITmin[2] = MIC_1 * VMAX[2] * LIT_2 / (KM[2] + LIT_2)   #MIC_1 decomp of STRUC lit
+    SOMmin[1] = MIC_1 * VMAX[3] * SOM_3 / (KM[3] + SOM_3)   #decomp of SOMa by MIC_1
+    LITmin[3] = MIC_2 * VMAX[4] * LIT_1 / (KM[4] + LIT_1)   #decomp of MET litter
+    LITmin[4] = MIC_2 * VMAX[5] * LIT_2 / (KM[5] + LIT_2)   #decomp of SRUCTURAL litter
+    SOMmin[2] = MIC_2 * VMAX[6] * SOM_3 / (KM[6] + SOM_3)   #decomp of SOMa by MIC_2
+    
+    #Nitrogen fluxes
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #Flows to and from MIC_1
+    LITminN[1] =  LITmin[1]*LIT_1_N/(LIT_1+1e-100)#LITmin[1]/CN_m
+    LITminN[2] =  LITmin[2]*LIT_2_N/(LIT_2++1e-100)#LITmin[2]/CN_s
+    SOMminN[1] =  SOMmin[1]*(SOM_3_N/(SOM_3++1e-100))#SOMmin[1]*(SOM_3_N/SOM_3)#*relRateN
+    LITminN[3] =  LITmin[3]*LIT_1_N/(LIT_1+1e-100)#LITmin[3]/CN_m
+    LITminN[4] =  LITmin[4]*LIT_2_N/(LIT_2+1e-100)#LITmin[4]/CN_s
+    SOMminN[2] =  SOMmin[2]*(SOM_3_N/(SOM_3+1e-100))#SOMmin[2]*(SOM_3_N/SOM_3)#*relRateN
+    DINup[1]   = (1-Nleak)*DIN*MIC_1/(MIC_1+MIC_2+1e-100) #Partitions available DIN between microbial pools based on relative biomass
+    DINup[2]   = (1-Nleak)*DIN*MIC_2/(MIC_1+MIC_2+1e-100)
+    
+    #####
+    upMIC_1    = CUE[1]*(LITmin[1] + SOMmin[1]) + CUE[2]*(LITmin[2])
+    upMIC_1_N  = NUE*(LITminN[1] + SOMminN[1]) + NUE*(LITminN[2]) + DINup[1]
+    CNup[1]    = (upMIC_1)/(upMIC_1_N+1e-100) #Trying to optimize run speed here by avoiding /0
+    Overflow[1] = (upMIC_1) - (upMIC_1_N)*min(CN_r, CNup[1])
+    Nspill[1]   = (upMIC_1_N) - (upMIC_1)/max(CN_r, CNup[1])
+    
+    upMIC_2    = CUE[3]*(LITmin[3] + SOMmin[2]) + CUE[4]*(LITmin[4])
+    upMIC_2_N  = NUE*(LITminN[3] + SOMminN[2]) + NUE*(LITminN[4]) + DINup[2]
+    CNup[2]    = (upMIC_2)/(upMIC_2_N+1e-100)
+    Overflow[2] = (upMIC_2) - (upMIC_2_N)*min(CN_K, CNup[2])
+    Nspill[2]   = (upMIC_2_N) - (upMIC_2)/max(CN_K, CNup[2])
+    ######
+    
+    dLIT_1 = Inputs[1]*(1-FI[1]) - LITmin[1] - LITmin[3]
+    dLIT_2 = Inputs[2]*(1-FI[2]) - LITmin[2] - LITmin[4]
+    dMIC_1 = CUE[1]*(LITmin[1] + SOMmin[1]) + CUE[2]*(LITmin[2]) - sum(MICtrn[1:3]) - Overflow[1]
+    dMIC_2 = CUE[3]*(LITmin[3] + SOMmin[2]) + CUE[4]*(LITmin[4]) - sum(MICtrn[4:6]) - Overflow[2] 
+    dSOM_1 = Inputs[1]*FI[1] + MICtrn[1] + MICtrn[4] - DEsorb 
+    dSOM_2 = Inputs[2]*FI[2] + MICtrn[2] + MICtrn[5] - OXIDAT
+    dSOM_3 = MICtrn[3] + MICtrn[6] + DEsorb + OXIDAT - SOMmin[1] - SOMmin[2]
+    
+    dLIT_1_N = Inputs[1]*(1-FI[1])/CN_m - LITminN[1] - LITminN[3]
+    dLIT_2_N = Inputs[2]*(1-FI[2])/CN_s - LITminN[2] - LITminN[4]
+    dMIC_1_N = NUE*(LITminN[1] + SOMminN[1]) + NUE*(LITminN[2]) - sum(MICtrnN[1:3]) + DINup[1] - Nspill[1]
+    dMIC_2_N = NUE*(LITminN[3] + SOMminN[2]) + NUE*(LITminN[4]) - sum(MICtrnN[4:6]) + DINup[2] - Nspill[2]
+    dSOM_1_N = Inputs[1]*FI[1]/CN_m + MICtrnN[1] + MICtrnN[4] - DEsorbN
+    dSOM_2_N = Inputs[2]*FI[2]/CN_s + MICtrnN[2] + MICtrnN[5] - OXIDATN
+    dSOM_3_N = MICtrnN[3] + MICtrnN[6] + DEsorbN + OXIDATN - SOMminN[1] - SOMminN[2]
+    
+    dDIN = (1-NUE)*(LITminN[1] + LITminN[2] + SOMminN[1]) +  #Inputs from r decomp
+        (1-NUE)*(LITminN[3] + LITminN[4] + SOMminN[2]) +  #Inputs from K decomp
+        Nspill[1] + Nspill[2] - DINup[1] - DINup[2]    #Uptake to microbial pools and spillage
+    LeachingLoss = Nleak*DIN
+    dDIN = dDIN-LeachingLoss #N leaching losses    
+    
+    Resp=(1-CUE[1])*(LITmin[1]+ SOMmin[1]) + (1-CUE[2])*(LITmin[2]) +
+        (1-CUE[3])*(LITmin[3]+ SOMmin[2]) + (1-CUE[4])*(LITmin[4]) + Overflow[1] + Overflow[2]
+    NminTot=(1-NUE)*(LITminN[1] + LITminN[2] + SOMminN[1]) +  #Inputs from r decomp
+        (1-NUE)*(LITminN[3] + LITminN[4] + SOMminN[2]) +  #Inputs from K decomp
+        Nspill[1] + Nspill[2]
+    NminNet=NminTot-DINup[1]-DINup[2]
+    
+    newrow <<- cbind.data.frame(Site, MIC_1,MIC_2,LIT_1,LIT_2,SOM_1,SOM_2,SOM_3,
+                                MIC_1_N,MIC_2_N,LIT_1_N,LIT_2_N,SOM_1_N,SOM_2_N,SOM_3_N,DIN, 
+                                NminTot,NminNet,Resp,
+                                stringsAsFactors = FALSE)
+    SSoutput[s,] <<- newrow
+}
+```
+
+
+```{r}
+x1 <- range(1,length(LTERdata$Site))
+t1 <- as.list(x1[1]:x1[2])
+ode_vector <- vector('list', length = length(t1))
+valiSites <- t1
+
+for(s in valiSites){
+    #Find steady state solution, plot to examine and output values to table
+    siteSpecificParameters()
+    initializePools()
+    #findSteadyState()
+    #outputSteadyState()
+    new_out_ODE <- ode_steadyState()
+    assign(paste0('minODE', s), new_out_ODE)
+    #ode_vector[i] <- new_out_ODE
+    
+} #finish site loop
+
+```
+
+
+
+```{r}
+meanODE1_d <- data.frame(meanODE1)
+meanODE2_d <- data.frame(meanODE2)
+meanODE3_d <- data.frame(meanODE3)
+meanODE4_d <- data.frame(meanODE4)
+meanODE5_d <- data.frame(meanODE5)
+meanODE6_d <- data.frame(meanODE6)
+meanODE7_d <- data.frame(meanODE7)
+meanODE8_d <- data.frame(meanODE8)
+meanODE9_d <- data.frame(meanODE9)
+meanODE10_d <- data.frame(meanODE10)
+meanODE11_d <- data.frame(meanODE11)
+meanODE12_d <- data.frame(meanODE12)
+meanODE13_d <- data.frame(meanODE13)
+meanODE14_d <- data.frame(meanODE14)
+meanODE15_d <- data.frame(meanODE15)
+meanODE16_d <- data.frame(meanODE16)
+meanODE17_d <- data.frame(meanODE17)
+meanODE18_d <- data.frame(meanODE18)
+meanODE19_d <- data.frame(meanODE19)
+
+maxODE1_d <- data.frame(maxODE1)
+maxODE2_d <- data.frame(maxODE2)
+maxODE3_d <- data.frame(maxODE3)
+maxODE4_d <- data.frame(maxODE4)
+maxODE5_d <- data.frame(maxODE5)
+maxODE6_d <- data.frame(maxODE6)
+maxODE7_d <- data.frame(maxODE7)
+maxODE8_d <- data.frame(maxODE8)
+maxODE9_d <- data.frame(maxODE9)
+maxODE10_d <- data.frame(maxODE10)
+maxODE11_d <- data.frame(maxODE11)
+maxODE12_d <- data.frame(maxODE12)
+maxODE13_d <- data.frame(maxODE13)
+maxODE14_d <- data.frame(maxODE14)
+maxODE15_d <- data.frame(maxODE15)
+maxODE16_d <- data.frame(maxODE16)
+maxODE17_d <- data.frame(maxODE17)
+maxODE18_d <- data.frame(maxODE18)
+maxODE19_d <- data.frame(maxODE19)
+
+minODE1_d <- data.frame(minODE1)
+minODE2_d <- data.frame(minODE2)
+minODE3_d <- data.frame(minODE3)
+minODE4_d <- data.frame(minODE4)
+minODE5_d <- data.frame(minODE5)
+minODE6_d <- data.frame(minODE6)
+minODE7_d <- data.frame(minODE7)
+minODE8_d <- data.frame(minODE8)
+minODE9_d <- data.frame(minODE9)
+minODE10_d <- data.frame(minODE10)
+minODE11_d <- data.frame(minODE11)
+minODE12_d <- data.frame(minODE12)
+minODE13_d <- data.frame(minODE13)
+minODE14_d <- data.frame(minODE14)
+minODE15_d <- data.frame(minODE15)
+minODE16_d <- data.frame(minODE16)
+minODE17_d <- data.frame(minODE17)
+minODE18_d <- data.frame(minODE18)
+minODE19_d <- data.frame(minODE19)
+```
+
+
+c <- (ggplot(data = horizon_use, mapping = aes(x = SOMc_est, y = SOMc, color = pH)) 
+          + geom_point() + xlim(0, 20) + ylim(0, 20) + geom_smooth(method = 'lm',
+                                                                     se=FALSE)
+      + geom_abline(intercept = 0, slope = 1)
+      + xlab("SOMMOS Light Frac (g/m2)") + ylab("MIMICS SOMc (g/gm2)")
+      + ggtitle('A-Horizon: SOMc'))
+```{r}
+
+for(i in 1:length(meanODE2_d$MIC_1)){
+    meanODE2_d$micRatio[i] <- meanODE2_d$MIC_1[i] / meanODE2_d$MIC_2[i]
+}
+
+for(i in 1:length(minODE2_d$MIC_1)){
+    minODE2_d$micRatio[i] <- minODE2_d$MIC_1[i] / minODE2_d$MIC_2[i]
+}
+
+```
+
+```{r}
+t_1 <- 1:90000
+
+pTALL_somp <- ggplot(NULL, aes(x = t_1)) + 
+    geom_line(data = minODE2_d, aes(x = time, y = SOM_1), color = 'blue') +
+    geom_line(data = meanODE2_d, aes(x = time, y = SOM_1), color = 'red') +
+    xlab('Time (hrs)') + ylab('Delta SOMp (g/cm2)')
+
+pTALL_somc <- ggplot(NULL, aes(x = t_1)) + 
+    geom_line(data = minODE2_d, aes(x = time, y = SOM_2), color = 'blue') +
+    geom_line(data = meanODE2_d, aes(x = time, y = SOM_2), color = 'red') +
+    xlab('Time (hrs)') + ylab('Delta SOMc (g/cm2)')
+
+pTALL_soma <- ggplot(NULL, aes(x = t_1)) + 
+    geom_line(data = minODE2_d, aes(x = time, y = SOM_3), color = 'blue') +
+    geom_line(data = meanODE2_d, aes(x = time, y = SOM_3), color = 'red') +
+    xlab('Time (hrs)') + ylab('Delta SOMa (g/cm2)')
+
+
+pTALL_micRat <- ggplot(NULL, aes(x = t_1)) + 
+    geom_line(data = minODE2_d, aes(x = time, y = micRatio), color = 'blue') +
+    geom_line(data = meanODE2_d, aes(x = time, y = micRatio), color = 'red') +
+    xlab('Time (hrs)') + ylab('Delta Microbial Community (ration r/k)')
+
+pTALL_somp + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black")) + pTALL_somc + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black")) + pTALL_soma + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black")) + pTALL_micRat + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black")) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black"))
+```
+
+```{r}
+library(patchwork)
+
+pTALL_somp + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black")) + pTALL_somc + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black")) + pTALL_soma + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black")) + pTALL_micRat + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black")) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black"))
+```
+
+```{r}
+pTALL_somp + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+panel.background = element_blank(), axis.line = element_line(colour = "black"))
+
+pTALL_somc + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+panel.background = element_blank(), axis.line = element_line(colour = "black"))
+
+pTALL_soma + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+panel.background = element_blank(), axis.line = element_line(colour = "black"))
+
+pTALL_micRat + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+panel.background = element_blank(), axis.line = element_line(colour = "black"))
+
+
+```
+
+```{r}
+
+pDELA_somp <- ggplot(NULL, aes(x = t_1)) + 
+    geom_line(data = minODE2_d, aes(y = SOM_1), color = 'blue') +
+    geom_line(data = meanODE2_d, aes(y = SOM_1), color = 'red') +
+    xlab('Time (hrs)') + ylab('Delta SOMP (g/cm2)')
+
+pBLAN_somp <- ggplot(NULL, aes(x = t_1)) + 
+    geom_line(data = minODE18_d, aes(y = SOM_1), color = 'blue') +
+    geom_line(data = meanODE18_d, aes(y = SOM_1), color = 'red') +
+    xlab('Time (hrs)') + ylab('Delta SOMP (g/cm2)')
+
+pHARV_somp <- ggplot(NULL, aes(x = t_1)) + 
+    geom_line(data = minODE19_d, aes(y = SOM_1), color = 'blue') +
+    geom_line(data = meanODE19_d, aes(y = SOM_1), color = 'red') +
+    xlab('Time (hrs)') + ylab('Delta SOMP (g/cm2)')
+
+```
