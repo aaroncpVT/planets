@@ -1,0 +1,363 @@
+---
+title: "Untitled"
+author: "Aaron Price"
+date: "5/31/2022"
+output: html_document
+---
+
+```{r}
+
+BLAN_litCN <- read.csv('NEON.D02.BLAN.DP1.10033.001.ltr_litterCarbonNitrogen.2020-11.expanded.20211222T011730Z.csv')
+BLAN_litLig <- read.csv('NEON.D02.BLAN.DP1.10033.001.ltr_litterLignin.2020-11.expanded.20211222T011730Z.csv')
+CLBJ_litCN <- read.csv('NEON.D11.CLBJ.DP1.10033.001.ltr_litterCarbonNitrogen.2019-11.expanded.20211222T013346Z.csv')
+CLBJ_litLig <- read.csv('NEON.D11.CLBJ.DP1.10033.001.ltr_litterLignin.2019-11.expanded.20211222T013346Z.csv')
+DEJU_litCN <- read.csv('NEON.D19.DEJU.DP1.10033.001.ltr_litterCarbonNitrogen.2018-09.expanded.20211221T204116Z.csv')
+DEJU_litLig <- read.csv('NEON.D19.DEJU.DP1.10033.001.ltr_litterLignin.2018-09.expanded.20211221T204116Z.csv')
+DELA_litCN <- read.csv('NEON.D08.DELA.DP1.10033.001.ltr_litterCarbonNitrogen.2019-11.expanded.20211221T234336Z.csv')
+DELA_litLig <- read.csv('NEON.D08.DELA.DP1.10033.001.ltr_litterLignin.2019-11.expanded.20211221T234336Z.csv')
+HARV_litCN <- read.csv('NEON.D01.HARV.DP1.10033.001.ltr_litterCarbonNitrogen.2018-10.expanded.20211221T230847Z.csv')
+HARV_litLig <- read.csv('NEON.D01.HARV.DP1.10033.001.ltr_litterLignin.2018-10.expanded.20211221T230847Z.csv')
+KONZ_litCN <- read.csv('NEON.D06.KONZ.DP1.10033.001.ltr_litterCarbonNitrogen.2017-10.expanded.20211221T204656Z - Copy.csv')
+KONZ_litLig <- read.csv('NEON.D06.KONZ.DP1.10033.001.ltr_litterLignin.2017-10.expanded.20211221T204656Z.csv')
+LENO_litCN <- read.csv('NEON.D08.LENO.DP1.10033.001.ltr_litterCarbonNitrogen.2018-11.expanded.20211221T203200Z.csv')
+LENO_litLig <- read.csv('NEON.D08.LENO.DP1.10033.001.ltr_litterLignin.2018-11.expanded.20211221T203200Z.csv')
+MLBS_litCN <- read.csv('NEON.D07.MLBS.DP1.10033.001.ltr_litterCarbonNitrogen.2018-10.expanded.20211221T210423Z.csv')
+MLBS_litLig <- read.csv('NEON.D07.MLBS.DP1.10033.001.ltr_litterLignin.2018-10.expanded.20211221T210423Z.csv')
+NIWO_litCN <- read.csv('NEON.D13.NIWO.DP1.10033.001.ltr_litterCarbonNitrogen.2020-09.expanded.20211221T220409Z.csv')
+NIWO_litLig <- read.csv('NEON.D13.NIWO.DP1.10033.001.ltr_litterLignin.2020-09.expanded.20211221T220409Z.csv')
+ORNL_litCN <- read.csv('NEON.D07.ORNL.DP1.10033.001.ltr_litterCarbonNitrogen.2017-11.expanded.20211222T031804Z.csv')
+ORNL_litLig <- read.csv('NEON.D07.ORNL.DP1.10033.001.ltr_litterLignin.2017-11.expanded.20211222T031804Z.csv')
+RMNP_litCN <- read.csv('NEON.D10.RMNP.DP1.10033.001.ltr_litterCarbonNitrogen.2020-10.expanded.20211222T032159Z.csv')
+RMNP_litLig <- read.csv('NEON.D10.RMNP.DP1.10033.001.ltr_litterLignin.2020-10.expanded.20211222T032159Z.csv')
+SCBI_litCN <- read.csv('NEON.D02.SCBI.DP1.10033.001.ltr_litterCarbonNitrogen.2017-11.expanded.20211221T231312Z.csv')
+SCBI_litLig <- read.csv('NEON.D02.SCBI.DP1.10033.001.ltr_litterLignin.2017-11.expanded.20211221T231312Z.csv')
+SJER_litCN <- read.csv('NEON.D17.SJER.DP1.10033.001.ltr_litterCarbonNitrogen.2019-10.expanded.20211221T200550Z.csv')
+SJER_litLig <- read.csv('NEON.D17.SJER.DP1.10033.001.ltr_litterLignin.2019-10.expanded.20211221T200550Z.csv')
+SOAP_litCN <- read.csv('NEON.D17.SOAP.DP1.10033.001.ltr_litterCarbonNitrogen.2018-10.expanded.20211222T014358Z.csv')
+SOAP_litLig <- read.csv('NEON.D17.SOAP.DP1.10033.001.ltr_litterLignin.2018-10.expanded.20211222T014358Z.csv')
+STEI_litCN <- read.csv('NEON.D05.STEI.DP1.10033.001.ltr_litterCarbonNitrogen.2016-09.expanded.20211222T025953Z.csv')
+STEI_litLig <- read.csv('NEON.D05.STEI.DP1.10033.001.ltr_litterLignin.2016-09.expanded.20211222T025953Z.csv')
+TALL_litCN <- read.csv('NEON.D08.TALL.DP1.10033.001.ltr_litterCarbonNitrogen.2017-11.expanded.20211222T041711Z.csv')
+TALL_litLig <- read.csv('NEON.D08.TALL.DP1.10033.001.ltr_litterLignin.2017-11.expanded.20211222T041711Z.csv')
+TREE_litCN <- read.csv('NEON.D05.TREE.DP1.10033.001.ltr_litterCarbonNitrogen.2020-09.expanded.20211221T235036Z.csv')
+TREE_litLig <- read.csv('NEON.D05.TREE.DP1.10033.001.ltr_litterLignin.2020-09.expanded.20211221T235036Z.csv')
+UNDE_litCN_1 <- read.csv('NEON.D05.UNDE.DP1.10033.001.ltr_litterCarbonNitrogen.2016-10.expanded.20211221T210318Z.csv')
+UNDE_litLig_1 <- read.csv('NEON.D05.UNDE.DP1.10033.001.ltr_litterLignin.2016-10.expanded.20211221T210318Z.csv')
+UNDE_litCN_2 <- read.csv('NEON.D05.UNDE.DP1.10033.001.ltr_litterCarbonNitrogen.2019-10.expanded.20211221T214230Z.csv')
+UNDE_litLig_2 <- read.csv('NEON.D05.UNDE.DP1.10033.001.ltr_litterLignin.2019-10.expanded.20211221T214230Z.csv')
+WREF_litCN <- read.csv('NEON.D16.WREF.DP1.10033.001.ltr_litterCarbonNitrogen.2019-09.expanded.20211222T040128Z.csv')
+WREF_litLig <- read.csv('NEON.D16.WREF.DP1.10033.001.ltr_litterLignin.2019-09.expanded.20211222T040128Z.csv')
+
+
+lig_files <- list(BLAN_litLig, CLBJ_litLig, DEJU_litLig, DELA_litLig, HARV_litLig, KONZ_litLig, LENO_litLig, MLBS_litLig,
+               NIWO_litLig, ORNL_litLig, RMNP_litLig, SCBI_litLig, SJER_litLig, SOAP_litLig, STEI_litLig, TALL_litLig,
+               TREE_litLig, UNDE_litLig_2, UNDE_litLig_2, WREF_litLig)
+
+cn_files <- list(BLAN_litCN, CLBJ_litCN, DEJU_litCN, DELA_litCN, HARV_litCN, KONZ_litCN, LENO_litLig, MLBS_litLig,
+              NIWO_litCN, ORNL_litCN, RMNP_litCN, SCBI_litCN, SJER_litCN, SOAP_litCN, STEI_litCN, TALL_litCN,
+              TREE_litCN, UNDE_litCN_1, UNDE_litCN_2, WREF_litCN)
+
+length(lig_files) == length(cn_files)
+```
+
+
+```{r}
+
+df_blan <- data.frame(matrix(ncol = 7, nrow = 12))
+colnames(df_blan) <- c('plotID', 'd15N', 'd13C', 'N', 'C', 'CN', 'lig')
+count <- 1
+count_t <- 1
+
+blan_lig_u <- unique(BLAN_litLig$plotID)
+blan_cn_u <- unique(BLAN_litCN$plotID)
+
+for(i in 1:length(blan_lig_u)){
+  for(n in 1:length(blan_cn_u)){
+    if(blan_lig_u[i] == blan_cn_u[n]){
+      df_blan$plotID[count] <- blan_cn_u[n]
+      count <- count + 1
+    }
+  }
+}
+
+for(n in 1:length(blan_cn_u)){
+  l_t <- data.frame(matrix(nrow = 20, ncol = 5))
+  colnames(l_t) <- c('d15N', 'd13C', 'N', 'C', 'CN')
+  for(i in 1:length(BLAN_litCN$plotID)){
+    if(BLAN_litCN$plotID[i] == blan_cn_u[n]){
+      l_t$d15N[count_t] <- BLAN_litCN$d15N[i]
+      l_t$d13C[count_t] <- BLAN_litCN$d13C[i]
+      l_t$N[count_t] <- BLAN_litCN$nitrogenPercent[i]
+      l_t$C[count_t] <- BLAN_litCN$carbonPercent[i]
+      l_t$CN[count_t] <- BLAN_litCN$CNratio[i]
+      count_t <- count_t + 1
+    }
+  }
+  df_blan$d15N[n] <- mean(l_t$d15N, na.rm = TRUE)
+  df_blan$d13C[n] <- mean(l_t$d13C ,na.rm = TRUE)
+  df_blan$N[n] <- mean(l_t$N ,na.rm = TRUE)
+  df_blan$C[n] <- mean(l_t$C ,na.rm = TRUE)
+  df_blan$CN[n] <- mean(l_t$CN ,na.rm = TRUE)
+}
+
+rm(l_t)
+rm(count_t)
+```
+
+```{r}
+
+rm(l_t)
+
+df_clbj <- data.frame(matrix(ncol = 7, nrow = 22))
+colnames(df_clbj) <- c('plotID', 'd15N', 'd13C', 'N', 'C', 'CN', 'lig')
+count <- 1
+count_t <- 1
+
+clbj_lig_u <- unique(CLBJ_litLig$plotID)
+clbj_cn_u <- unique(CLBJ_litCN$plotID)
+
+for(i in 1:length(clbj_lig_u)){
+  for(n in 1:length(clbj_cn_u)){
+    if(clbj_lig_u[i] == clbj_cn_u[n]){
+      df_clbj$plotID[count] <- clbj_cn_u[n]
+      count <- count + 1
+    }
+  }
+}
+
+for(n in 1:length(clbj_cn_u)){
+  l_t <- data.frame(matrix(nrow = 30, ncol = 5))
+  colnames(l_t) <- c('d15N', 'd13C', 'N', 'C', 'CN')
+  for(i in 1:length(CLBJ_litCN$plotID)){
+    if(CLBJ_litCN$plotID[i] == clbj_cn_u[n]){
+      l_t$d15N[count_t] <- CLBJ_litCN$d15N[i]
+      l_t$d13C[count_t] <- CLBJ_litCN$d13C[i]
+      l_t$N[count_t] <- CLBJ_litCN$nitrogenPercent[i]
+      l_t$C[count_t] <- CLBJ_litCN$carbonPercent[i]
+      l_t$CN[count_t] <- CLBJ_litCN$CNratio[i]
+      count_t <- count_t + 1
+    }
+  }
+  df_clbj$d15N[n] <- mean(l_t$d15N, na.rm = TRUE)
+  df_clbj$d13C[n] <- mean(l_t$d13C ,na.rm = TRUE)
+  df_clbj$N[n] <- mean(l_t$N ,na.rm = TRUE)
+  df_clbj$C[n] <- mean(l_t$C ,na.rm = TRUE)
+  df_clbj$CN[n] <- mean(l_t$CN ,na.rm = TRUE)
+}
+
+```
+
+
+```{r}
+dela_lig_u <- unique(DELA_litLig$plotID)
+dela_cn_u <- unique(DELA_litCN$plotID)
+
+for(i in 1:length(dela_lig_u)){
+  for(n in 1:length(dela_cn_u)){
+    if(dela_lig_u[i] == dela_cn_u[n]){
+      df$plotID[count] <- dela_cn_u[n]
+      count <- count + 1
+    }
+  }
+}
+
+
+```
+
+```{r}
+harv_lig_u <- unique(HARV_litLig$plotID)
+harv_cn_u <- unique(HARV_litCN$plotID)
+
+for(i in 1:length(harv_lig_u)){
+  for(n in 1:length(harv_cn_u)){
+    if(harv_lig_u[i] == harv_cn_u[n]){
+      df$plotID[count] <- harv_cn_u[n]
+      count <- count + 1
+    }
+  }
+}
+
+konz_lig_u <- unique(KONZ_litLig$plotID)
+konz_cn_u <- unique(KONZ_litCN$plotID)
+
+for(i in 1:length(konz_lig_u)){
+  for(n in 1:length(konz_cn_u)){
+    if(konz_lig_u[i] == konz_cn_u[n]){
+      df$plotID[count] <- konz_cn_u[n]
+      count <- count + 1
+    }
+  }
+}
+
+leno_lig_u <- unique(LENO_litLig$plotID)
+leno_cn_u <- unique(LENO_litCN$plotID)
+
+for(i in 1:length(leno_lig_u)){
+  for(n in 1:length(leno_cn_u)){
+    if(leno_lig_u[i] == leno_cn_u[n]){
+      df$plotID[count] <- leno_cn_u[n]
+      count <- count + 1
+    }
+  }
+}
+
+mlbs_lig_u <- unique(MLBS_litLig$plotID)
+mlbs_cn_u <- unique(MLBS_litCN$plotID)
+
+for(i in 1:length(mlbs_lig_u)){
+  for(n in 1:length(mlbs_cn_u)){
+    if(mlbs_lig_u[i] == mlbs_cn_u[n]){
+      df$plotID[count] <- mlbs_cn_u[n]
+      count <- count + 1
+    }
+  }
+}
+
+niwo_lig_u <- unique(NIWO_litLig$plotID)
+niwo_cn_u <- unique(NIWO_litCN$plotID)
+
+for(i in 1:length(niwo_lig_u)){
+  for(n in 1:length(niwo_cn_u)){
+    if(niwo_lig_u[i] == niwo_cn_u[n]){
+      df$plotID[count] <- niwo_cn_u[n]
+      count <- count + 1
+    }
+  }
+}
+
+ornl_lig_u <- unique(ORNL_litLig$plotID)
+ornl_cn_u <- unique(ORNL_litCN$plotID)
+
+for(i in 1:length(ornl_lig_u)){
+  for(n in 1:length(ornl_cn_u)){
+    if(ornl_lig_u[i] == ornl_cn_u[n]){
+      df$plotID[count] <- ornl_cn_u[n]
+      count <- count + 1
+    }
+  }
+}
+
+rmnp_lig_u <- unique(RMNP_litLig$plotID)
+rmnp_cn_u <- unique(RMNP_litCN$plotID)
+
+for(i in 1:length(rmnp_lig_u)){
+  for(n in 1:length(rmnp_cn_u)){
+    if(rmnp_lig_u[i] == rmnp_cn_u[n]){
+      df$plotID[count] <- rmnp_cn_u[n]
+      count <- count + 1
+    }
+  }
+}
+
+scbi_lig_u <- unique(SCBI_litLig$plotID)
+scbi_cn_u <- unique(SCBI_litCN$plotID)
+
+for(i in 1:length(scbi_lig_u)){
+  for(n in 1:length(scbi_cn_u)){
+    if(scbi_lig_u[i] == scbi_cn_u[n]){
+      df$plotID[count] <- scbi_cn_u[n]
+      count <- count + 1
+    }
+  }
+}
+
+sjer_lig_u <- unique(SJER_litLig$plotID)
+sjer_cn_u <- unique(SJER_litCN$plotID)
+
+for(i in 1:length(sjer_lig_u)){
+  for(n in 1:length(sjer_cn_u)){
+    if(sjer_lig_u[i] == sjer_cn_u[n]){
+      df$plotID[count] <- sjer_cn_u[n]
+      count <- count + 1
+    }
+  }
+}
+
+soap_lig_u <- unique(SOAP_litLig$plotID)
+soap_cn_u <- unique(SOAP_litCN$plotID)
+
+for(i in 1:length(soap_lig_u)){
+  for(n in 1:length(soap_cn_u)){
+    if(soap_lig_u[i] == soap_cn_u[n]){
+      df$plotID[count] <- soap_cn_u[n]
+      count <- count + 1
+    }
+  }
+}
+
+stei_lig_u <- unique(STEI_litLig$plotID)
+stei_cn_u <- unique(STEI_litCN$plotID)
+
+for(i in 1:length(stei_lig_u)){
+  for(n in 1:length(stei_cn_u)){
+    if(stei_lig_u[i] == stei_cn_u[n]){
+      df$plotID[count] <- stei_cn_u[n]
+      count <- count + 1
+    }
+  }
+}
+
+tall_lig_u <- unique(TALL_litLig$plotID)
+tall_cn_u <- unique(TALL_litCN$plotID)
+
+for(i in 1:length(tall_lig_u)){
+  for(n in 1:length(tall_cn_u)){
+    if(tall_lig_u[i] == tall_cn_u[n]){
+      df$plotID[count] <- tall_cn_u[n]
+      count <- count + 1
+    }
+  }
+}
+
+tree_lig_u <- unique(TREE_litLig$plotID)
+tree_cn_u <- unique(TREE_litCN$plotID)
+
+for(i in 1:length(tree_lig_u)){
+  for(n in 1:length(tree_cn_u)){
+    if(tree_lig_u[i] == tree_cn_u[n]){
+      df$plotID[count] <- tree_cn_u[n]
+      count <- count + 1
+    }
+  }
+}
+
+unde1_lig_u <- unique(UNDE_litLig_1$plotID)
+unde1_cn_u <- unique(UNDE_litCN_1$plotID)
+
+for(i in 1:length(unde1_lig_u)){
+  for(n in 1:length(unde1_cn_u)){
+    if(unde1_lig_u[i] == unde1_cn_u[n]){
+      df$plotID[count] <- unde1_cn_u[n]
+      count <- count + 1
+    }
+  }
+}
+
+unde2_lig_u <- unique(UNDE_litLig_2$plotID)
+unde2_cn_u <- unique(UNDE_litCN_2$plotID)
+
+for(i in 1:length(unde2_lig_u)){
+  for(n in 1:length(unde2_cn_u)){
+    if(unde2_lig_u[i] == unde2_cn_u[n]){
+      df$plotID[count] <- unde2_cn_u[n]
+      count <- count + 1
+    }
+  }
+}
+
+wref_lig_u <- unique(WREF_litLig$plotID)
+wref_cn_u <- unique(WREF_litCN$plotID)
+
+for(i in 1:length(wref_lig_u)){
+  for(n in 1:length(wref_cn_u)){
+    if(wref_lig_u[i] == wref_cn_u[n]){
+      df$plotID[count] <- wref_cn_u[n]
+      count <- count + 1
+    }
+  }
+}
+```
+
+
+
+
