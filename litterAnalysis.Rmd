@@ -6,7 +6,6 @@ output: html_document
 ---
 
 ```{r}
-
 BLAN_litCN <- read.csv('NEON.D02.BLAN.DP1.10033.001.ltr_litterCarbonNitrogen.2020-11.expanded.20211222T011730Z.csv')
 BLAN_litLig <- read.csv('NEON.D02.BLAN.DP1.10033.001.ltr_litterLignin.2020-11.expanded.20211222T011730Z.csv')
 CLBJ_litCN <- read.csv('NEON.D11.CLBJ.DP1.10033.001.ltr_litterCarbonNitrogen.2019-11.expanded.20211222T013346Z.csv')
@@ -47,26 +46,13 @@ UNDE_litCN_2 <- read.csv('NEON.D05.UNDE.DP1.10033.001.ltr_litterCarbonNitrogen.2
 UNDE_litLig_2 <- read.csv('NEON.D05.UNDE.DP1.10033.001.ltr_litterLignin.2019-10.expanded.20211221T214230Z.csv')
 WREF_litCN <- read.csv('NEON.D16.WREF.DP1.10033.001.ltr_litterCarbonNitrogen.2019-09.expanded.20211222T040128Z.csv')
 WREF_litLig <- read.csv('NEON.D16.WREF.DP1.10033.001.ltr_litterLignin.2019-09.expanded.20211222T040128Z.csv')
-
-
-lig_files <- list(BLAN_litLig, CLBJ_litLig, DEJU_litLig, DELA_litLig, HARV_litLig, KONZ_litLig, LENO_litLig, MLBS_litLig,
-               NIWO_litLig, ORNL_litLig, RMNP_litLig, SCBI_litLig, SJER_litLig, SOAP_litLig, STEI_litLig, TALL_litLig,
-               TREE_litLig, UNDE_litLig_2, UNDE_litLig_2, WREF_litLig)
-
-cn_files <- list(BLAN_litCN, CLBJ_litCN, DEJU_litCN, DELA_litCN, HARV_litCN, KONZ_litCN, LENO_litLig, MLBS_litLig,
-              NIWO_litCN, ORNL_litCN, RMNP_litCN, SCBI_litCN, SJER_litCN, SOAP_litCN, STEI_litCN, TALL_litCN,
-              TREE_litCN, UNDE_litCN_1, UNDE_litCN_2, WREF_litCN)
-
-length(lig_files) == length(cn_files)
 ```
 
 
 ```{r}
-
 df_blan <- data.frame(matrix(ncol = 7, nrow = 12))
 colnames(df_blan) <- c('plotID', 'd15N', 'd13C', 'N', 'C', 'CN', 'lig')
 count <- 1
-count_t <- 1
 
 blan_lig_u <- unique(BLAN_litLig$plotID)
 blan_cn_u <- unique(BLAN_litCN$plotID)
@@ -83,6 +69,7 @@ for(i in 1:length(blan_lig_u)){
 for(n in 1:length(blan_cn_u)){
   l_t <- data.frame(matrix(nrow = 20, ncol = 5))
   colnames(l_t) <- c('d15N', 'd13C', 'N', 'C', 'CN')
+  count_t <- 1
   for(i in 1:length(BLAN_litCN$plotID)){
     if(BLAN_litCN$plotID[i] == blan_cn_u[n]){
       l_t$d15N[count_t] <- BLAN_litCN$d15N[i]
@@ -99,19 +86,13 @@ for(n in 1:length(blan_cn_u)){
   df_blan$C[n] <- mean(l_t$C ,na.rm = TRUE)
   df_blan$CN[n] <- mean(l_t$CN ,na.rm = TRUE)
 }
-
-rm(l_t)
-rm(count_t)
 ```
 
 ```{r}
 
-rm(l_t)
-
 df_clbj <- data.frame(matrix(ncol = 7, nrow = 22))
 colnames(df_clbj) <- c('plotID', 'd15N', 'd13C', 'N', 'C', 'CN', 'lig')
 count <- 1
-count_t <- 1
 
 clbj_lig_u <- unique(CLBJ_litLig$plotID)
 clbj_cn_u <- unique(CLBJ_litCN$plotID)
@@ -128,6 +109,7 @@ for(i in 1:length(clbj_lig_u)){
 for(n in 1:length(clbj_cn_u)){
   l_t <- data.frame(matrix(nrow = 30, ncol = 5))
   colnames(l_t) <- c('d15N', 'd13C', 'N', 'C', 'CN')
+  count_t <- 1
   for(i in 1:length(CLBJ_litCN$plotID)){
     if(CLBJ_litCN$plotID[i] == clbj_cn_u[n]){
       l_t$d15N[count_t] <- CLBJ_litCN$d15N[i]
@@ -149,33 +131,88 @@ for(n in 1:length(clbj_cn_u)){
 
 
 ```{r}
+df_dela <- data.frame(matrix(ncol = 7, nrow = 20))
+colnames(df_dela) <- c('plotID', 'd15N', 'd13C', 'N', 'C', 'CN', 'lig')
+count <- 1
+
 dela_lig_u <- unique(DELA_litLig$plotID)
 dela_cn_u <- unique(DELA_litCN$plotID)
 
 for(i in 1:length(dela_lig_u)){
   for(n in 1:length(dela_cn_u)){
     if(dela_lig_u[i] == dela_cn_u[n]){
-      df$plotID[count] <- dela_cn_u[n]
+      df_dela$plotID[count] <- dela_cn_u[n]
       count <- count + 1
     }
   }
 }
 
+for(n in 1:length(dela_cn_u)){
+  l_t <- data.frame(matrix(nrow = 30, ncol = 5))
+  colnames(l_t) <- c('d15N', 'd13C', 'N', 'C', 'CN')
+  count_t <- 1
+  for(i in 1:length(DELA_litCN$plotID)){
+    if(DELA_litCN$plotID[i] == dela_cn_u[n]){
+      l_t$d15N[count_t] <- DELA_litCN$d15N[i]
+      l_t$d13C[count_t] <- DELA_litCN$d13C[i]
+      l_t$N[count_t] <- DELA_litCN$nitrogenPercent[i]
+      l_t$C[count_t] <- DELA_litCN$carbonPercent[i]
+      l_t$CN[count_t] <- DELA_litCN$CNratio[i]
+      count_t <- count_t + 1
+    }
+  }
+  df_dela$d15N[n] <- mean(l_t$d15N, na.rm = TRUE)
+  df_dela$d13C[n] <- mean(l_t$d13C ,na.rm = TRUE)
+  df_dela$N[n] <- mean(l_t$N ,na.rm = TRUE)
+  df_dela$C[n] <- mean(l_t$C ,na.rm = TRUE)
+  df_dela$CN[n] <- mean(l_t$CN ,na.rm = TRUE)
+}
 
 ```
 
 ```{r}
+df_harv <- data.frame(matrix(ncol = 7, nrow = 20))
+colnames(df_harv) <- c('plotID', 'd15N', 'd13C', 'N', 'C', 'CN', 'lig')
+count <- 1
+
 harv_lig_u <- unique(HARV_litLig$plotID)
 harv_cn_u <- unique(HARV_litCN$plotID)
 
 for(i in 1:length(harv_lig_u)){
   for(n in 1:length(harv_cn_u)){
     if(harv_lig_u[i] == harv_cn_u[n]){
-      df$plotID[count] <- harv_cn_u[n]
+      df_harv$plotID[count] <- harv_cn_u[n]
       count <- count + 1
     }
   }
 }
+
+for(n in 1:length(harv_cn_u)){
+  l_t <- data.frame(matrix(nrow = 35, ncol = 5))
+  colnames(l_t) <- c('d15N', 'd13C', 'N', 'C', 'CN')
+  count_t <- 1
+  for(i in 1:length(HARV_litCN$plotID)){
+    if(HARV_litCN$plotID[i] == harv_cn_u[n]){
+      l_t$d15N[count_t] <- HARV_litCN$d15N[i]
+      l_t$d13C[count_t] <- HARV_litCN$d13C[i]
+      l_t$N[count_t] <- HARV_litCN$nitrogenPercent[i]
+      l_t$C[count_t] <- HARV_litCN$carbonPercent[i]
+      l_t$CN[count_t] <- HARV_litCN$CNratio[i]
+      count_t <- count_t + 1
+    }
+  }
+  df_harv$d15N[n] <- mean(l_t$d15N, na.rm = TRUE)
+  df_harv$d13C[n] <- mean(l_t$d13C ,na.rm = TRUE)
+  df_harv$N[n] <- mean(l_t$N ,na.rm = TRUE)
+  df_harv$C[n] <- mean(l_t$C ,na.rm = TRUE)
+  df_harv$CN[n] <- mean(l_t$CN ,na.rm = TRUE)
+}
+```
+
+```{r}
+df_konz <- data.frame(matrix(ncol = 7, nrow = 4))
+colnames(df_konz) <- c('plotID', 'd15N', 'd13C', 'N', 'C', 'CN', 'lig')
+count <- 1
 
 konz_lig_u <- unique(KONZ_litLig$plotID)
 konz_cn_u <- unique(KONZ_litCN$plotID)
@@ -183,11 +220,38 @@ konz_cn_u <- unique(KONZ_litCN$plotID)
 for(i in 1:length(konz_lig_u)){
   for(n in 1:length(konz_cn_u)){
     if(konz_lig_u[i] == konz_cn_u[n]){
-      df$plotID[count] <- konz_cn_u[n]
+      df_konz$plotID[count] <- konz_cn_u[n]
       count <- count + 1
     }
   }
 }
+
+for(n in 1:length(konz_cn_u)){
+  l_t <- data.frame(matrix(nrow = 35, ncol = 5))
+  colnames(l_t) <- c('d15N', 'd13C', 'N', 'C', 'CN')
+  count_t <- 1
+  for(i in 1:length(KONZ_litCN$plotID)){
+    if(KONZ_litCN$plotID[i] == konz_cn_u[n]){
+      l_t$d15N[count_t] <- KONZ_litCN$d15N[i]
+      l_t$d13C[count_t] <- KONZ_litCN$d13C[i]
+      l_t$N[count_t] <- KONZ_litCN$nitrogenPercent[i]
+      l_t$C[count_t] <- KONZ_litCN$carbonPercent[i]
+      l_t$CN[count_t] <- KONZ_litCN$CNratio[i]
+      count_t <- count_t + 1
+    }
+  }
+  df_konz$d15N[n] <- mean(l_t$d15N, na.rm = TRUE)
+  df_konz$d13C[n] <- mean(l_t$d13C ,na.rm = TRUE)
+  df_konz$N[n] <- mean(l_t$N ,na.rm = TRUE)
+  df_konz$C[n] <- mean(l_t$C ,na.rm = TRUE)
+  df_konz$CN[n] <- mean(l_t$CN ,na.rm = TRUE)
+}
+```
+
+```{r}
+df_leno <- data.frame(matrix(ncol = 7, nrow = 10))
+colnames(df_leno) <- c('plotID', 'd15N', 'd13C', 'N', 'C', 'CN', 'lig')
+count <- 1
 
 leno_lig_u <- unique(LENO_litLig$plotID)
 leno_cn_u <- unique(LENO_litCN$plotID)
@@ -195,11 +259,38 @@ leno_cn_u <- unique(LENO_litCN$plotID)
 for(i in 1:length(leno_lig_u)){
   for(n in 1:length(leno_cn_u)){
     if(leno_lig_u[i] == leno_cn_u[n]){
-      df$plotID[count] <- leno_cn_u[n]
+      df_leno$plotID[count] <- leno_cn_u[n]
       count <- count + 1
     }
   }
 }
+
+for(n in 1:length(leno_cn_u)){
+  l_t <- data.frame(matrix(nrow = 35, ncol = 5))
+  colnames(l_t) <- c('d15N', 'd13C', 'N', 'C', 'CN')
+  count_t <- 1
+  for(i in 1:length(LENO_litCN$plotID)){
+    if(LENO_litCN$plotID[i] == leno_cn_u[n]){
+      l_t$d15N[count_t] <- LENO_litCN$d15N[i]
+      l_t$d13C[count_t] <- LENO_litCN$d13C[i]
+      l_t$N[count_t] <- LENO_litCN$nitrogenPercent[i]
+      l_t$C[count_t] <- LENO_litCN$carbonPercent[i]
+      l_t$CN[count_t] <- LENO_litCN$CNratio[i]
+      count_t <- count_t + 1
+    }
+  }
+  df_leno$d15N[n] <- mean(l_t$d15N, na.rm = TRUE)
+  df_leno$d13C[n] <- mean(l_t$d13C ,na.rm = TRUE)
+  df_leno$N[n] <- mean(l_t$N ,na.rm = TRUE)
+  df_leno$C[n] <- mean(l_t$C ,na.rm = TRUE)
+  df_leno$CN[n] <- mean(l_t$CN ,na.rm = TRUE)
+}
+```
+
+```{r}
+df_mlbs <- data.frame(matrix(ncol = 7, nrow = 16))
+colnames(df_mlbs) <- c('plotID', 'd15N', 'd13C', 'N', 'C', 'CN', 'lig')
+count <- 1
 
 mlbs_lig_u <- unique(MLBS_litLig$plotID)
 mlbs_cn_u <- unique(MLBS_litCN$plotID)
@@ -207,11 +298,42 @@ mlbs_cn_u <- unique(MLBS_litCN$plotID)
 for(i in 1:length(mlbs_lig_u)){
   for(n in 1:length(mlbs_cn_u)){
     if(mlbs_lig_u[i] == mlbs_cn_u[n]){
-      df$plotID[count] <- mlbs_cn_u[n]
+      df_mlbs$plotID[count] <- mlbs_cn_u[n]
       count <- count + 1
     }
   }
 }
+
+for(n in 1:length(mlbs_cn_u)){
+  l_t <- data.frame(matrix(nrow = 35, ncol = 5))
+  colnames(l_t) <- c('d15N', 'd13C', 'N', 'C', 'CN')
+  count_t <- 1
+  for(i in 1:length(MLBS_litCN$plotID)){
+    if(MLBS_litCN$plotID[i] == mlbs_cn_u[n]){
+      l_t$d15N[count_t] <- MLBS_litCN$d15N[i]
+      l_t$d13C[count_t] <- MLBS_litCN$d13C[i]
+      l_t$N[count_t] <- MLBS_litCN$nitrogenPercent[i]
+      l_t$C[count_t] <- MLBS_litCN$carbonPercent[i]
+      l_t$CN[count_t] <- MLBS_litCN$CNratio[i]
+      count_t <- count_t + 1
+    }
+  }
+  df_mlbs$d15N[n] <- mean(l_t$d15N, na.rm = TRUE)
+  df_mlbs$d13C[n] <- mean(l_t$d13C ,na.rm = TRUE)
+  df_mlbs$N[n] <- mean(l_t$N ,na.rm = TRUE)
+  df_mlbs$C[n] <- mean(l_t$C ,na.rm = TRUE)
+  df_mlbs$CN[n] <- mean(l_t$CN ,na.rm = TRUE)
+}
+```
+
+```{r}
+
+```
+
+```{r}
+df_niwo <- data.frame(matrix(ncol = 7, nrow = 9))
+colnames(df_niwo) <- c('plotID', 'd15N', 'd13C', 'N', 'C', 'CN', 'lig')
+count <- 1
 
 niwo_lig_u <- unique(NIWO_litLig$plotID)
 niwo_cn_u <- unique(NIWO_litCN$plotID)
@@ -219,11 +341,40 @@ niwo_cn_u <- unique(NIWO_litCN$plotID)
 for(i in 1:length(niwo_lig_u)){
   for(n in 1:length(niwo_cn_u)){
     if(niwo_lig_u[i] == niwo_cn_u[n]){
-      df$plotID[count] <- niwo_cn_u[n]
+      df_niwo$plotID[count] <- niwo_cn_u[n]
       count <- count + 1
     }
   }
 }
+
+for(n in 1:length(df_niwo$plotID)){
+  l_t <- data.frame(matrix(nrow = 35, ncol = 6))
+  colnames(l_t) <- c('plotID', 'd15N', 'd13C', 'N', 'C', 'CN')
+  count_t <- 1
+  for(i in 1:length(NIWO_litCN$plotID)){
+    if(NIWO_litCN$plotID[i] == df_niwo$plotID[n]){
+      l_t$plotID[count_t] <- NIWO_litCN$plotID[i]
+      l_t$d15N[count_t] <- NIWO_litCN$d15N[i]
+      l_t$d13C[count_t] <- NIWO_litCN$d13C[i]
+      l_t$N[count_t] <- NIWO_litCN$nitrogenPercent[i]
+      l_t$C[count_t] <- NIWO_litCN$carbonPercent[i]
+      l_t$CN[count_t] <- NIWO_litCN$CNratio[i]
+      count_t <- count_t + 1
+    }
+  }
+  df_niwo$d15N[n] <- mean(l_t$d15N, na.rm = TRUE)
+  df_niwo$d13C[n] <- mean(l_t$d13C ,na.rm = TRUE)
+  df_niwo$N[n] <- mean(l_t$N ,na.rm = TRUE)
+  df_niwo$C[n] <- mean(l_t$C ,na.rm = TRUE)
+  df_niwo$CN[n] <- mean(l_t$CN ,na.rm = TRUE)
+  
+}
+```
+
+```{r}
+df_ornl <- data.frame(matrix(ncol = 7, nrow = 20))
+colnames(df_ornl) <- c('plotID', 'd15N', 'd13C', 'N', 'C', 'CN', 'lig')
+count <- 1
 
 ornl_lig_u <- unique(ORNL_litLig$plotID)
 ornl_cn_u <- unique(ORNL_litCN$plotID)
@@ -231,11 +382,39 @@ ornl_cn_u <- unique(ORNL_litCN$plotID)
 for(i in 1:length(ornl_lig_u)){
   for(n in 1:length(ornl_cn_u)){
     if(ornl_lig_u[i] == ornl_cn_u[n]){
-      df$plotID[count] <- ornl_cn_u[n]
+      df_ornl$plotID[count] <- ornl_cn_u[n]
       count <- count + 1
     }
   }
 }
+
+for(n in 1:length(ornl_cn_u)){
+  l_t <- data.frame(matrix(nrow = 35, ncol = 5))
+  colnames(l_t) <- c('d15N', 'd13C', 'N', 'C', 'CN')
+  count_t <- 1
+  for(i in 1:length(ORNL_litCN$plotID)){
+    if(ORNL_litCN$plotID[i] == ornl_cn_u[n]){
+      l_t$d15N[count_t] <- ORNL_litCN$d15N[i]
+      l_t$d13C[count_t] <- ORNL_litCN$d13C[i]
+      l_t$N[count_t] <- ORNL_litCN$nitrogenPercent[i]
+      l_t$C[count_t] <- ORNL_litCN$carbonPercent[i]
+      l_t$CN[count_t] <- ORNL_litCN$CNratio[i]
+      count_t <- count_t + 1
+    }
+  }
+  df_ornl$d15N[n] <- mean(l_t$d15N, na.rm = TRUE)
+  df_ornl$d13C[n] <- mean(l_t$d13C ,na.rm = TRUE)
+  df_ornl$N[n] <- mean(l_t$N ,na.rm = TRUE)
+  df_ornl$C[n] <- mean(l_t$C ,na.rm = TRUE)
+  df_ornl$CN[n] <- mean(l_t$CN ,na.rm = TRUE)
+}
+
+```
+
+```{r}
+df_rmnp <- data.frame(matrix(ncol = 7, nrow = 8))
+colnames(df_rmnp) <- c('plotID', 'd15N', 'd13C', 'N', 'C', 'CN', 'lig')
+count <- 1
 
 rmnp_lig_u <- unique(RMNP_litLig$plotID)
 rmnp_cn_u <- unique(RMNP_litCN$plotID)
@@ -243,11 +422,42 @@ rmnp_cn_u <- unique(RMNP_litCN$plotID)
 for(i in 1:length(rmnp_lig_u)){
   for(n in 1:length(rmnp_cn_u)){
     if(rmnp_lig_u[i] == rmnp_cn_u[n]){
-      df$plotID[count] <- rmnp_cn_u[n]
+      df_rmnp$plotID[count] <- rmnp_cn_u[n]
       count <- count + 1
     }
   }
 }
+
+
+for(n in 1:length(df_rmnp$plotID)){
+  l_t <- data.frame(matrix(nrow = 35, ncol = 6))
+  colnames(l_t) <- c('plotID', 'd15N', 'd13C', 'N', 'C', 'CN')
+  count_t <- 1
+  for(i in 1:length(RMNP_litCN$plotID)){
+    if(RMNP_litCN$plotID[i] == df_rmnp$plotID[n]){
+      l_t$plotID[count_t] <- RMNP_litCN$plotID[i]
+      l_t$d15N[count_t] <- RMNP_litCN$d15N[i]
+      l_t$d13C[count_t] <- RMNP_litCN$d13C[i]
+      l_t$N[count_t] <- RMNP_litCN$nitrogenPercent[i]
+      l_t$C[count_t] <- RMNP_litCN$carbonPercent[i]
+      l_t$CN[count_t] <- RMNP_litCN$CNratio[i]
+      count_t <- count_t + 1
+    }
+  }
+  df_rmnp$d15N[n] <- mean(l_t$d15N, na.rm = TRUE)
+  df_rmnp$d13C[n] <- mean(l_t$d13C ,na.rm = TRUE)
+  df_rmnp$N[n] <- mean(l_t$N ,na.rm = TRUE)
+  df_rmnp$C[n] <- mean(l_t$C ,na.rm = TRUE)
+  df_rmnp$CN[n] <- mean(l_t$CN ,na.rm = TRUE)
+  
+}
+```
+
+
+```{r}
+df_scbi <- data.frame(matrix(ncol = 7, nrow = 13))
+colnames(df_scbi) <- c('plotID', 'd15N', 'd13C', 'N', 'C', 'CN', 'lig')
+count <- 1
 
 scbi_lig_u <- unique(SCBI_litLig$plotID)
 scbi_cn_u <- unique(SCBI_litCN$plotID)
@@ -255,11 +465,38 @@ scbi_cn_u <- unique(SCBI_litCN$plotID)
 for(i in 1:length(scbi_lig_u)){
   for(n in 1:length(scbi_cn_u)){
     if(scbi_lig_u[i] == scbi_cn_u[n]){
-      df$plotID[count] <- scbi_cn_u[n]
+      df_scbi$plotID[count] <- scbi_cn_u[n]
       count <- count + 1
     }
   }
 }
+
+for(n in 1:length(scbi_cn_u)){
+  l_t <- data.frame(matrix(nrow = 35, ncol = 5))
+  colnames(l_t) <- c('d15N', 'd13C', 'N', 'C', 'CN')
+  count_t <- 1
+  for(i in 1:length(SCBI_litCN$plotID)){
+    if(SCBI_litCN$plotID[i] == scbi_cn_u[n]){
+      l_t$d15N[count_t] <- SCBI_litCN$d15N[i]
+      l_t$d13C[count_t] <- SCBI_litCN$d13C[i]
+      l_t$N[count_t] <- SCBI_litCN$nitrogenPercent[i]
+      l_t$C[count_t] <- SCBI_litCN$carbonPercent[i]
+      l_t$CN[count_t] <- SCBI_litCN$CNratio[i]
+      count_t <- count_t + 1
+    }
+  }
+  df_scbi$d15N[n] <- mean(l_t$d15N, na.rm = TRUE)
+  df_scbi$d13C[n] <- mean(l_t$d13C ,na.rm = TRUE)
+  df_scbi$N[n] <- mean(l_t$N ,na.rm = TRUE)
+  df_scbi$C[n] <- mean(l_t$C ,na.rm = TRUE)
+  df_scbi$CN[n] <- mean(l_t$CN ,na.rm = TRUE)
+}
+```
+
+```{r}
+df_sjer <- data.frame(matrix(ncol = 7, nrow = 15))
+colnames(df_sjer) <- c('plotID', 'd15N', 'd13C', 'N', 'C', 'CN', 'lig')
+count <- 1
 
 sjer_lig_u <- unique(SJER_litLig$plotID)
 sjer_cn_u <- unique(SJER_litCN$plotID)
@@ -267,11 +504,39 @@ sjer_cn_u <- unique(SJER_litCN$plotID)
 for(i in 1:length(sjer_lig_u)){
   for(n in 1:length(sjer_cn_u)){
     if(sjer_lig_u[i] == sjer_cn_u[n]){
-      df$plotID[count] <- sjer_cn_u[n]
+      df_sjer$plotID[count] <- sjer_cn_u[n]
       count <- count + 1
     }
   }
 }
+
+for(n in 1:length(df_sjer$plotID)){
+  l_t <- data.frame(matrix(nrow = 35, ncol = 6))
+  colnames(l_t) <- c('plotID', 'd15N', 'd13C', 'N', 'C', 'CN')
+  count_t <- 1
+  for(i in 1:length(SJER_litCN$plotID)){
+    if(SJER_litCN$plotID[i] == df_sjer$plotID[n]){
+      l_t$plotID[count_t] <- SJER_litCN$plotID[i]
+      l_t$d15N[count_t] <- SJER_litCN$d15N[i]
+      l_t$d13C[count_t] <- SJER_litCN$d13C[i]
+      l_t$N[count_t] <- SJER_litCN$nitrogenPercent[i]
+      l_t$C[count_t] <- SJER_litCN$carbonPercent[i]
+      l_t$CN[count_t] <- SJER_litCN$CNratio[i]
+      count_t <- count_t + 1
+    }
+  }
+  df_sjer$d15N[n] <- mean(l_t$d15N, na.rm = TRUE)
+  df_sjer$d13C[n] <- mean(l_t$d13C ,na.rm = TRUE)
+  df_sjer$N[n] <- mean(l_t$N ,na.rm = TRUE)
+  df_sjer$C[n] <- mean(l_t$C ,na.rm = TRUE)
+  df_sjer$CN[n] <- mean(l_t$CN ,na.rm = TRUE)
+}
+```
+
+```{r}
+df_soap <- data.frame(matrix(ncol = 7, nrow = 18))
+colnames(df_soap) <- c('plotID', 'd15N', 'd13C', 'N', 'C', 'CN', 'lig')
+count <- 1
 
 soap_lig_u <- unique(SOAP_litLig$plotID)
 soap_cn_u <- unique(SOAP_litCN$plotID)
@@ -279,11 +544,39 @@ soap_cn_u <- unique(SOAP_litCN$plotID)
 for(i in 1:length(soap_lig_u)){
   for(n in 1:length(soap_cn_u)){
     if(soap_lig_u[i] == soap_cn_u[n]){
-      df$plotID[count] <- soap_cn_u[n]
+      df_soap$plotID[count] <- soap_cn_u[n]
       count <- count + 1
     }
   }
 }
+
+for(n in 1:length(df_soap$plotID)){
+  l_t <- data.frame(matrix(nrow = 35, ncol = 6))
+  colnames(l_t) <- c('plotID', 'd15N', 'd13C', 'N', 'C', 'CN')
+  count_t <- 1
+  for(i in 1:length(SOAP_litCN$plotID)){
+    if(SOAP_litCN$plotID[i] == df_soap$plotID[n]){
+      l_t$plotID[count_t] <- SOAP_litCN$plotID[i]
+      l_t$d15N[count_t] <- SOAP_litCN$d15N[i]
+      l_t$d13C[count_t] <- SOAP_litCN$d13C[i]
+      l_t$N[count_t] <- SOAP_litCN$nitrogenPercent[i]
+      l_t$C[count_t] <- SOAP_litCN$carbonPercent[i]
+      l_t$CN[count_t] <- SOAP_litCN$CNratio[i]
+      count_t <- count_t + 1
+    }
+  }
+  df_soap$d15N[n] <- mean(l_t$d15N, na.rm = TRUE)
+  df_soap$d13C[n] <- mean(l_t$d13C ,na.rm = TRUE)
+  df_soap$N[n] <- mean(l_t$N ,na.rm = TRUE)
+  df_soap$C[n] <- mean(l_t$C ,na.rm = TRUE)
+  df_soap$CN[n] <- mean(l_t$CN ,na.rm = TRUE)
+}
+```
+
+```{r}
+df_stei <- data.frame(matrix(ncol = 7, nrow = 1))
+colnames(df_stei) <- c('plotID', 'd15N', 'd13C', 'N', 'C', 'CN', 'lig')
+count <- 1
 
 stei_lig_u <- unique(STEI_litLig$plotID)
 stei_cn_u <- unique(STEI_litCN$plotID)
@@ -291,11 +584,41 @@ stei_cn_u <- unique(STEI_litCN$plotID)
 for(i in 1:length(stei_lig_u)){
   for(n in 1:length(stei_cn_u)){
     if(stei_lig_u[i] == stei_cn_u[n]){
-      df$plotID[count] <- stei_cn_u[n]
+      df_stei$plotID[count] <- stei_cn_u[n]
       count <- count + 1
     }
   }
 }
+
+
+for(n in 1:length(df_stei$plotID)){
+  l_t <- data.frame(matrix(nrow = 35, ncol = 6))
+  colnames(l_t) <- c('plotID', 'd15N', 'd13C', 'N', 'C', 'CN')
+  count_t <- 1
+  for(i in 1:length(STEI_litCN$plotID)){
+    if(STEI_litCN$plotID[i] == df_stei$plotID[n]){
+      l_t$plotID[count_t] <- STEI_litCN$plotID[i]
+      l_t$d15N[count_t] <- STEI_litCN$d15N[i]
+      l_t$d13C[count_t] <- STEI_litCN$d13C[i]
+      l_t$N[count_t] <- STEI_litCN$nitrogenPercent[i]
+      l_t$C[count_t] <- STEI_litCN$carbonPercent[i]
+      l_t$CN[count_t] <- STEI_litCN$CNratio[i]
+      count_t <- count_t + 1
+    }
+  }
+  df_stei$d15N[n] <- mean(l_t$d15N, na.rm = TRUE)
+  df_stei$d13C[n] <- mean(l_t$d13C ,na.rm = TRUE)
+  df_stei$N[n] <- mean(l_t$N ,na.rm = TRUE)
+  df_stei$C[n] <- mean(l_t$C ,na.rm = TRUE)
+  df_stei$CN[n] <- mean(l_t$CN ,na.rm = TRUE)
+}
+
+```
+
+```{r}
+df_tall <- data.frame(matrix(ncol = 7, nrow = 20))
+colnames(df_tall) <- c('plotID', 'd15N', 'd13C', 'N', 'C', 'CN', 'lig')
+count <- 1
 
 tall_lig_u <- unique(TALL_litLig$plotID)
 tall_cn_u <- unique(TALL_litCN$plotID)
@@ -303,11 +626,40 @@ tall_cn_u <- unique(TALL_litCN$plotID)
 for(i in 1:length(tall_lig_u)){
   for(n in 1:length(tall_cn_u)){
     if(tall_lig_u[i] == tall_cn_u[n]){
-      df$plotID[count] <- tall_cn_u[n]
+      df_tall$plotID[count] <- tall_cn_u[n]
       count <- count + 1
     }
   }
 }
+
+
+for(n in 1:length(df_tall$plotID)){
+  l_t <- data.frame(matrix(nrow = 35, ncol = 6))
+  colnames(l_t) <- c('plotID', 'd15N', 'd13C', 'N', 'C', 'CN')
+  count_t <- 1
+  for(i in 1:length(TALL_litCN$plotID)){
+    if(TALL_litCN$plotID[i] == df_tall$plotID[n]){
+      l_t$d15N[count_t] <- TALL_litCN$d15N[i]
+      l_t$d13C[count_t] <- TALL_litCN$d13C[i]
+      l_t$N[count_t] <- TALL_litCN$nitrogenPercent[i]
+      l_t$C[count_t] <- TALL_litCN$carbonPercent[i]
+      l_t$CN[count_t] <- TALL_litCN$CNratio[i]
+      count_t <- count_t + 1
+    }
+  }
+  df_tall$d15N[n] <- mean(l_t$d15N, na.rm = TRUE)
+  df_tall$d13C[n] <- mean(l_t$d13C ,na.rm = TRUE)
+  df_tall$N[n] <- mean(l_t$N ,na.rm = TRUE)
+  df_tall$C[n] <- mean(l_t$C ,na.rm = TRUE)
+  df_tall$CN[n] <- mean(l_t$CN ,na.rm = TRUE)
+}
+
+```
+
+```{r}
+df_tree <- data.frame(matrix(ncol = 7, nrow = 15))
+colnames(df_tree) <- c('plotID', 'd15N', 'd13C', 'N', 'C', 'CN', 'lig')
+count <- 1
 
 tree_lig_u <- unique(TREE_litLig$plotID)
 tree_cn_u <- unique(TREE_litCN$plotID)
@@ -315,11 +667,40 @@ tree_cn_u <- unique(TREE_litCN$plotID)
 for(i in 1:length(tree_lig_u)){
   for(n in 1:length(tree_cn_u)){
     if(tree_lig_u[i] == tree_cn_u[n]){
-      df$plotID[count] <- tree_cn_u[n]
+      df_tree$plotID[count] <- tree_cn_u[n]
       count <- count + 1
     }
   }
 }
+
+
+for(n in 1:length(df_tree$plotID)){
+  l_t <- data.frame(matrix(nrow = 35, ncol = 6))
+  colnames(l_t) <- c('plotID', 'd15N', 'd13C', 'N', 'C', 'CN')
+  count_t <- 1
+  for(i in 1:length(TREE_litCN$plotID)){
+    if(TREE_litCN$plotID[i] == df_tree$plotID[n]){
+      l_t$d15N[count_t] <- TREE_litCN$d15N[i]
+      l_t$d13C[count_t] <- TREE_litCN$d13C[i]
+      l_t$N[count_t] <- TREE_litCN$nitrogenPercent[i]
+      l_t$C[count_t] <- TREE_litCN$carbonPercent[i]
+      l_t$CN[count_t] <- TREE_litCN$CNratio[i]
+      count_t <- count_t + 1
+    }
+  }
+  df_tree$d15N[n] <- mean(l_t$d15N, na.rm = TRUE)
+  df_tree$d13C[n] <- mean(l_t$d13C ,na.rm = TRUE)
+  df_tree$N[n] <- mean(l_t$N ,na.rm = TRUE)
+  df_tree$C[n] <- mean(l_t$C ,na.rm = TRUE)
+  df_tree$CN[n] <- mean(l_t$CN ,na.rm = TRUE)
+}
+
+```
+
+```{r}
+df_unde1 <- data.frame(matrix(ncol = 7, nrow = 9))
+colnames(df_unde1) <- c('plotID', 'd15N', 'd13C', 'N', 'C', 'CN', 'lig')
+count <- 1
 
 unde1_lig_u <- unique(UNDE_litLig_1$plotID)
 unde1_cn_u <- unique(UNDE_litCN_1$plotID)
@@ -327,11 +708,38 @@ unde1_cn_u <- unique(UNDE_litCN_1$plotID)
 for(i in 1:length(unde1_lig_u)){
   for(n in 1:length(unde1_cn_u)){
     if(unde1_lig_u[i] == unde1_cn_u[n]){
-      df$plotID[count] <- unde1_cn_u[n]
+      df_unde1$plotID[count] <- unde1_cn_u[n]
       count <- count + 1
     }
   }
 }
+
+for(n in 1:length(df_unde1$plotID)){
+  l_t <- data.frame(matrix(nrow = 35, ncol = 6))
+  colnames(l_t) <- c('plotID', 'd15N', 'd13C', 'N', 'C', 'CN')
+  count_t <- 1
+  for(i in 1:length(UNDE_litCN_1$plotID)){
+    if(UNDE_litCN_1$plotID[i] == df_unde1$plotID[n]){
+      l_t$d15N[count_t] <- UNDE_litCN_1$d15N[i]
+      l_t$d13C[count_t] <- UNDE_litCN_1$d13C[i]
+      l_t$N[count_t] <- UNDE_litCN_1$nitrogenPercent[i]
+      l_t$C[count_t] <- UNDE_litCN_1$carbonPercent[i]
+      l_t$CN[count_t] <- UNDE_litCN_1$CNratio[i]
+      count_t <- count_t + 1
+    }
+  }
+  df_unde1$d15N[n] <- mean(l_t$d15N, na.rm = TRUE)
+  df_unde1$d13C[n] <- mean(l_t$d13C ,na.rm = TRUE)
+  df_unde1$N[n] <- mean(l_t$N ,na.rm = TRUE)
+  df_unde1$C[n] <- mean(l_t$C ,na.rm = TRUE)
+  df_unde1$CN[n] <- mean(l_t$CN ,na.rm = TRUE)
+}
+```
+
+```{r}
+df_unde2 <- data.frame(matrix(ncol = 7, nrow = 20))
+colnames(df_unde2) <- c('plotID', 'd15N', 'd13C', 'N', 'C', 'CN', 'lig')
+count <- 1
 
 unde2_lig_u <- unique(UNDE_litLig_2$plotID)
 unde2_cn_u <- unique(UNDE_litCN_2$plotID)
@@ -339,11 +747,38 @@ unde2_cn_u <- unique(UNDE_litCN_2$plotID)
 for(i in 1:length(unde2_lig_u)){
   for(n in 1:length(unde2_cn_u)){
     if(unde2_lig_u[i] == unde2_cn_u[n]){
-      df$plotID[count] <- unde2_cn_u[n]
+      df_unde2$plotID[count] <- unde2_cn_u[n]
       count <- count + 1
     }
   }
 }
+
+for(n in 1:length(df_unde2$plotID)){
+  l_t <- data.frame(matrix(nrow = 35, ncol = 6))
+  colnames(l_t) <- c('plotID', 'd15N', 'd13C', 'N', 'C', 'CN')
+  count_t <- 1
+  for(i in 1:length(UNDE_litCN_2$plotID)){
+    if(UNDE_litCN_2$plotID[i] == df_unde2$plotID[n]){
+      l_t$d15N[count_t] <- UNDE_litCN_2$d15N[i]
+      l_t$d13C[count_t] <- UNDE_litCN_2$d13C[i]
+      l_t$N[count_t] <- UNDE_litCN_2$nitrogenPercent[i]
+      l_t$C[count_t] <- UNDE_litCN_2$carbonPercent[i]
+      l_t$CN[count_t] <- UNDE_litCN_2$CNratio[i]
+      count_t <- count_t + 1
+    }
+  }
+  df_unde2$d15N[n] <- mean(l_t$d15N, na.rm = TRUE)
+  df_unde2$d13C[n] <- mean(l_t$d13C ,na.rm = TRUE)
+  df_unde2$N[n] <- mean(l_t$N ,na.rm = TRUE)
+  df_unde2$C[n] <- mean(l_t$C ,na.rm = TRUE)
+  df_unde2$CN[n] <- mean(l_t$CN ,na.rm = TRUE)
+}
+```
+
+```{r}
+df_wref <- data.frame(matrix(ncol = 7, nrow = 20))
+colnames(df_wref) <- c('plotID', 'd15N', 'd13C', 'N', 'C', 'CN', 'lig')
+count <- 1
 
 wref_lig_u <- unique(WREF_litLig$plotID)
 wref_cn_u <- unique(WREF_litCN$plotID)
@@ -351,13 +786,51 @@ wref_cn_u <- unique(WREF_litCN$plotID)
 for(i in 1:length(wref_lig_u)){
   for(n in 1:length(wref_cn_u)){
     if(wref_lig_u[i] == wref_cn_u[n]){
-      df$plotID[count] <- wref_cn_u[n]
+      df_wref$plotID[count] <- wref_cn_u[n]
       count <- count + 1
     }
   }
 }
+
+for(n in 1:length(df_wref$plotID)){
+  l_t <- data.frame(matrix(nrow = 35, ncol = 6))
+  colnames(l_t) <- c('plotID', 'd15N', 'd13C', 'N', 'C', 'CN')
+  count_t <- 1
+  for(i in 1:length(WREF_litCN$plotID)){
+    if(WREF_litCN$plotID[i] == df_wref$plotID[n]){
+      l_t$d15N[count_t] <- WREF_litCN$d15N[i]
+      l_t$d13C[count_t] <- WREF_litCN$d13C[i]
+      l_t$N[count_t] <- WREF_litCN$nitrogenPercent[i]
+      l_t$C[count_t] <- WREF_litCN$carbonPercent[i]
+      l_t$CN[count_t] <- WREF_litCN$CNratio[i]
+      count_t <- count_t + 1
+    }
+  }
+  df_wref$d15N[n] <- mean(l_t$d15N, na.rm = TRUE)
+  df_wref$d13C[n] <- mean(l_t$d13C ,na.rm = TRUE)
+  df_wref$N[n] <- mean(l_t$N ,na.rm = TRUE)
+  df_wref$C[n] <- mean(l_t$C ,na.rm = TRUE)
+  df_wref$CN[n] <- mean(l_t$CN ,na.rm = TRUE)
+}
 ```
 
 
+
+```{r}
+
+
+test_1 = rbind(df_blan, df_clbj, df_dela, df_harv, df_konz, df_leno, df_mlbs,
+               df_niwo, df_ornl, df_rmnp, df_scbi, df_sjer, df_soap, df_stei,
+               df_tall, df_tree, df_unde1, df_unde2, df_wref)
+
+```
+
+
+```{r}
+
+
+plot(test_1$N, test_1$CN)
+
+```
 
 
